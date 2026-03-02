@@ -40,6 +40,10 @@ export class AudioManager {
   private melodyGain: GainNode | null = null;
   private melodyNoteIndex = 0;
   private nextNoteTime = 0;
+  private phrase: Array<{ freq: number; durationMult: number }> = [];
+  private phrasePos = 0;
+  private lastPhraseIndices: number[] = [];
+  private lastPhraseRhythm: number[] = [];
 
   // --- Tension layer ---
   private tensionOscillators: OscillatorNode[] = [];
@@ -130,6 +134,13 @@ export class AudioManager {
 
     this.applyIntensity(this.currentIntensity);
     this.scheduleMelody(this.currentIntensity);
+  }
+
+  /** Resume a suspended AudioContext (e.g., after first user gesture). */
+  resumeContext(): void {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
   }
 
   setMasterVolume(volume: number): void {
@@ -365,9 +376,12 @@ export class AudioManager {
   }
 
   /**
-   * Schedule the next melodic note when the time comes.
-   * Picks notes from the pentatonic scale (peaceful) or mixes in
-   * dark chromatic tones as intensity rises.
+   * Phrase-based melody scheduler.
+   *
+   * Instead of picking random notes one at a time, pre-generates musical
+   * phrases with contour, rhythmic variation, tonic resolution, and rests
+   * between phrases. Occasionally repeats the previous phrase transposed
+   * for motif development.
    */
   private scheduleMelody(intensity: number): void {
     if (!this.ctx || !this.melodyOsc || !this.melodyEnvelope) return;
@@ -375,36 +389,34 @@ export class AudioManager {
     const now = this.ctx.currentTime;
     if (now < this.nextNoteTime) return;
 
-    // Pick a note — blend peace and dark scales based on intensity
     const mc = AC.melody;
-    const peaceNotes = mc.peaceNotes;
-    const darkNotes = mc.darkNotes;
+    const baseInterval = lerp(mc.baseInterval, mc.dangerInterval, intensity);
 
-    let freq: number;
-    // At low intensity, always use peaceful pentatonic.
-    // As intensity rises, increasingly chance of a dark note.
-    if (Math.random() < intensity * 0.6 && darkNotes.length > 0) {
-      // Dark note — random pick
-      freq = darkNotes[Math.floor(Math.random() * darkNotes.length)];
-    } else {
-      // Stepwise motion: move ±1-3 steps from current index
-      const maxStep = 1 + Math.floor(Math.random() * 3);
-      const direction = Math.random() < 0.5 ? -1 : 1;
-      this.melodyNoteIndex = clamp(
-        this.melodyNoteIndex + direction * maxStep,
-        0,
-        peaceNotes.length - 1,
-      );
-      freq = peaceNotes[this.melodyNoteIndex];
+    // Need a new phrase?
+    if (this.phrasePos >= this.phrase.length) {
+      this.generatePhrase(intensity);
+      // Breathing rest between phrases
+      const restMult =
+        mc.phraseRestMin +
+        Math.random() * (mc.phraseRestMax - mc.phraseRestMin);
+      this.nextNoteTime = now + baseInterval * restMult;
+      return; // silence — don't play a note this frame
     }
 
-    // Schedule note envelope: attack → sustain → release
+    const note = this.phrase[this.phrasePos];
+    this.phrasePos++;
+
+    // Calculate note duration in seconds
+    const noteDuration = baseInterval * note.durationMult;
+
+    // Schedule note envelope: attack → decay → sustain → release
     const attackEnd = now + mc.attackTime;
     const decayEnd = attackEnd + mc.decayTime;
-    const releaseStart = decayEnd + 0.15;
+    // Ensure release fits within the note duration
+    const releaseStart = Math.max(decayEnd, now + noteDuration - mc.releaseTime);
     const releaseEnd = releaseStart + mc.releaseTime;
 
-    this.melodyOsc.frequency.setTargetAtTime(freq, now, 0.01);
+    this.melodyOsc.frequency.setTargetAtTime(note.freq, now, 0.01);
 
     const env = this.melodyEnvelope.gain;
     env.cancelScheduledValues(now);
@@ -414,11 +426,139 @@ export class AudioManager {
     env.setValueAtTime(mc.sustainLevel, releaseStart);
     env.linearRampToValueAtTime(0, releaseEnd);
 
-    // Schedule next note
-    const interval = lerp(mc.baseInterval, mc.dangerInterval, intensity);
-    // Add slight human-feel variation (±15%)
-    const jitter = 1 + (Math.random() - 0.5) * 0.3;
-    this.nextNoteTime = now + interval * jitter;
+    // Schedule next note with slight human-feel jitter (±8%)
+    const jitter = 1 + (Math.random() - 0.5) * 0.16;
+    this.nextNoteTime = now + noteDuration * jitter;
+  }
+
+  /**
+   * Generate a musical phrase — a sequence of notes with contour,
+   * rhythmic variation, and resolution to a strong scale degree.
+   */
+  private generatePhrase(intensity: number): void {
+    const mc = AC.melody;
+    const peaceNotes = mc.peaceNotes;
+    const darkNotes = mc.darkNotes;
+
+    // --- Motif repetition: replay previous phrase transposed ---
+    if (
+      this.lastPhraseIndices.length > 0 &&
+      Math.random() < mc.motifRepeatChance
+    ) {
+      const transposition =
+        (Math.random() < 0.5 ? 1 : -1) *
+        (1 + Math.floor(Math.random() * 3));
+      this.phrase = this.lastPhraseIndices.map((idx, i) => {
+        const newIdx = clamp(idx + transposition, 0, peaceNotes.length - 1);
+        return {
+          freq: peaceNotes[newIdx],
+          durationMult: this.lastPhraseRhythm[i],
+        };
+      });
+      this.phrasePos = 0;
+      return;
+    }
+
+    // --- Phrase length (shorter at high intensity) ---
+    const maxLen = intensity < 0.5 ? mc.phraseMax : mc.phraseMax - 2;
+    const len =
+      mc.phraseMin +
+      Math.floor(Math.random() * (Math.max(1, maxLen - mc.phraseMin) + 1));
+
+    // --- Contour shape ---
+    // 0 = arch (up then down), 1 = valley (down then up),
+    // 2 = ascending, 3 = descending
+    const contourType = Math.floor(Math.random() * 4);
+
+    // --- Rhythmic pattern (duration multipliers) ---
+    const rhythmPatterns = [
+      [1, 1, 1, 1, 1, 1, 1], // even
+      [1.5, 0.75, 0.75, 1.5, 0.75, 0.75, 1], // dotted feel
+      [1, 0.5, 1, 0.5, 1, 0.5, 1], // long-short
+      [0.5, 0.5, 1.5, 0.5, 0.5, 1.5, 1], // short-short-long
+    ];
+    const rhythm =
+      rhythmPatterns[Math.floor(Math.random() * rhythmPatterns.length)];
+
+    // --- Strong scale degrees for resolution (C and G) ---
+    // Indices: 0=C3, 3=G3, 5=C4, 8=G4, 10=C5
+    const strongIndices = [0, 3, 5, 8, 10];
+
+    const indices: number[] = [];
+    const durations: number[] = [];
+
+    for (let i = 0; i < len; i++) {
+      const progress = len > 1 ? i / (len - 1) : 0;
+
+      // Direction from contour shape
+      let preferUp: boolean;
+      switch (contourType) {
+        case 0:
+          preferUp = progress < 0.5;
+          break; // arch
+        case 1:
+          preferUp = progress >= 0.5;
+          break; // valley
+        case 2:
+          preferUp = true;
+          break; // ascending
+        default:
+          preferUp = false;
+          break; // descending
+      }
+
+      if (i === len - 1) {
+        // Last note resolves to nearest root (C) or fifth (G)
+        let best = strongIndices[0];
+        let bestDist = Math.abs(this.melodyNoteIndex - best);
+        for (const s of strongIndices) {
+          const d = Math.abs(this.melodyNoteIndex - s);
+          if (d < bestDist) {
+            best = s;
+            bestDist = d;
+          }
+        }
+        this.melodyNoteIndex = best;
+      } else {
+        // Prefer small intervals: 60% step(1), 30% skip(2), 10% leap(3)
+        const r = Math.random();
+        const step = r < 0.6 ? 1 : r < 0.9 ? 2 : 3;
+        const dir = preferUp ? 1 : -1;
+        this.melodyNoteIndex = clamp(
+          this.melodyNoteIndex + dir * step,
+          0,
+          peaceNotes.length - 1,
+        );
+      }
+
+      indices.push(this.melodyNoteIndex);
+
+      // Last note of phrase is held longer for breathing
+      let dur = rhythm[i % rhythm.length];
+      if (i === len - 1) dur *= 1.5;
+      durations.push(dur);
+    }
+
+    // Build the phrase, mixing in dark notes at high intensity
+    // (never on the resolving last note)
+    this.phrase = indices.map((idx, i) => {
+      let freq: number;
+      if (
+        i !== len - 1 &&
+        Math.random() < intensity * 0.4 &&
+        darkNotes.length > 0
+      ) {
+        freq = darkNotes[Math.floor(Math.random() * darkNotes.length)];
+      } else {
+        freq = peaceNotes[idx];
+      }
+      return { freq, durationMult: durations[i] };
+    });
+
+    // Save for potential motif repetition
+    this.lastPhraseIndices = indices;
+    this.lastPhraseRhythm = durations;
+    this.phrasePos = 0;
   }
 
   private buildShimmer(): void {

@@ -89,8 +89,13 @@ export const CONFIG = {
       ] as readonly number[],
       baseVolume: 0.09,
       dangerVolume: 0.07,
-      baseInterval: 0.5, // 120 BPM at peace
-      dangerInterval: 0.375, // 160 BPM at danger
+      baseInterval: 0.6, // ~100 BPM at peace
+      dangerInterval: 0.375, // ~160 BPM at danger
+      phraseMin: 3, // min notes per phrase
+      phraseMax: 7, // max notes per phrase
+      phraseRestMin: 1.5, // min beats of silence between phrases
+      phraseRestMax: 2.5, // max beats of silence between phrases
+      motifRepeatChance: 0.3, // chance to repeat previous phrase transposed
       attackTime: 0.03,
       decayTime: 0.15,
       sustainLevel: 0.35,

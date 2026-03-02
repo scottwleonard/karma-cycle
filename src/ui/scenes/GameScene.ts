@@ -122,7 +122,6 @@ export class GameScene extends Container {
 
   // Audio
   private audioManager: AudioManager;
-  private audioInitialized = false;
 
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
@@ -132,15 +131,15 @@ export class GameScene extends Container {
     this.buildUI();
     this.setupEvents();
 
-    // Init audio on first user interaction (browser autoplay policy)
-    const initAudioOnce = () => {
-      if (!this.audioInitialized) {
-        this.audioManager.init();
-        this.audioInitialized = true;
-        document.removeEventListener('pointerdown', initAudioOnce);
-      }
+    // Init audio immediately — AudioContext may start suspended due to
+    // browser autoplay policy, but will auto-resume on first user gesture.
+    // We also listen for pointerdown as a fallback to ensure it resumes.
+    this.audioManager.init();
+    const resumeAudioOnce = () => {
+      this.audioManager.resumeContext();
+      document.removeEventListener('pointerdown', resumeAudioOnce);
     };
-    document.addEventListener('pointerdown', initAudioOnce);
+    document.addEventListener('pointerdown', resumeAudioOnce);
 
     // Restore enlightenment visuals from saved state
     this.mandala.setEnlightenmentTier(engine.state.enlightenmentTier);
