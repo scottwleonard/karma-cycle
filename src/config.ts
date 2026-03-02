@@ -55,16 +55,16 @@ export const CONFIG = {
     drone: {
       baseFreq: 65,
       dangerFreq: 55,
-      baseVolume: 0.03,
-      dangerVolume: 0.08,
+      baseVolume: 0.015,
+      dangerVolume: 0.04,
       lfoRate: 0.3,
       lfoBaseDepth: 2,
       lfoDangerDepth: 8,
     },
     pad: {
       frequencies: [130.81, 155.56, 196.0, 233.08] as readonly number[],
-      baseVolume: 0.02,
-      dangerVolume: 0.015,
+      baseVolume: 0.01,
+      dangerVolume: 0.008,
       maxDetuneCents: 8,
       dissonanceShift: -3,
     },
@@ -72,8 +72,8 @@ export const CONFIG = {
       bufferDuration: 4,
       baseFilterCutoff: 8000,
       dangerFilterCutoff: 800,
-      baseVolume: 0.012,
-      dangerVolume: 0.05,
+      baseVolume: 0.006,
+      dangerVolume: 0.025,
     },
     melody: {
       // C minor pentatonic across octaves 3–5 (peaceful)
@@ -89,12 +89,12 @@ export const CONFIG = {
       ] as readonly number[],
       baseVolume: 0.09,
       dangerVolume: 0.07,
-      baseInterval: 1.1, // seconds between notes at peace
-      dangerInterval: 0.5, // faster at danger
-      attackTime: 0.04,
-      decayTime: 0.25,
+      baseInterval: 0.5, // 120 BPM at peace
+      dangerInterval: 0.375, // 160 BPM at danger
+      attackTime: 0.03,
+      decayTime: 0.15,
       sustainLevel: 0.35,
-      releaseTime: 0.5,
+      releaseTime: 0.3,
     },
     tension: {
       frequencies: [92, 35] as readonly number[],
