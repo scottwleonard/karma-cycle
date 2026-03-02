@@ -33,6 +33,14 @@ export class AudioManager {
   private shimmerFilter: BiquadFilterNode | null = null;
   private shimmerGain: GainNode | null = null;
 
+  // --- Melody layer ---
+  private melodyOsc: OscillatorNode | null = null;
+  private melodyEnvelope: GainNode | null = null;
+  private melodyFilter: BiquadFilterNode | null = null;
+  private melodyGain: GainNode | null = null;
+  private melodyNoteIndex = 0;
+  private nextNoteTime = 0;
+
   // --- Tension layer ---
   private tensionOscillators: OscillatorNode[] = [];
   private tensionLFO: OscillatorNode | null = null;
@@ -70,6 +78,7 @@ export class AudioManager {
 
     this.buildDrone();
     this.buildPad();
+    this.buildMelody();
     this.buildShimmer();
     this.buildTension();
 
@@ -86,6 +95,7 @@ export class AudioManager {
     this.drone?.stop();
     this.droneLFO?.stop();
     this.padOscillators.forEach((o) => o.stop());
+    this.melodyOsc?.stop();
     this.shimmerSource?.stop();
     this.tensionOscillators.forEach((o) => o.stop());
     this.tensionLFO?.stop();
@@ -119,6 +129,7 @@ export class AudioManager {
     );
 
     this.applyIntensity(this.currentIntensity);
+    this.scheduleMelody(this.currentIntensity);
   }
 
   setMasterVolume(volume: number): void {
@@ -221,6 +232,21 @@ export class AudioManager {
       });
     }
 
+    // --- Melody ---
+    if (this.melodyGain && this.melodyFilter) {
+      this.melodyGain.gain.setTargetAtTime(
+        lerp(AC.melody.baseVolume, AC.melody.dangerVolume, t),
+        now,
+        sm,
+      );
+      // Darken the melody tone as intensity rises
+      this.melodyFilter.frequency.setTargetAtTime(
+        lerp(4000, 1200, t),
+        now,
+        sm,
+      );
+    }
+
     // --- Shimmer ---
     if (this.shimmerFilter && this.shimmerGain) {
       this.shimmerFilter.frequency.setTargetAtTime(
@@ -305,6 +331,94 @@ export class AudioManager {
       osc.start();
       return osc;
     });
+  }
+
+  private buildMelody(): void {
+    const ctx = this.ctx!;
+
+    // Persistent oscillator — we change its frequency for each note
+    this.melodyOsc = ctx.createOscillator();
+    this.melodyOsc.type = 'sine';
+    this.melodyOsc.frequency.value = AC.melody.peaceNotes[0];
+
+    // Per-note envelope (gain ramps for attack/decay/release)
+    this.melodyEnvelope = ctx.createGain();
+    this.melodyEnvelope.gain.value = 0; // silent until first note
+
+    // Gentle lowpass to soften the tone
+    this.melodyFilter = ctx.createBiquadFilter();
+    this.melodyFilter.type = 'lowpass';
+    this.melodyFilter.frequency.value = 4000;
+    this.melodyFilter.Q.value = 0.7;
+
+    // Master volume for the melody layer
+    this.melodyGain = ctx.createGain();
+    this.melodyGain.gain.value = AC.melody.baseVolume;
+
+    this.melodyOsc.connect(this.melodyEnvelope);
+    this.melodyEnvelope.connect(this.melodyFilter);
+    this.melodyFilter.connect(this.melodyGain);
+    this.melodyGain.connect(this.masterGain!);
+
+    this.melodyOsc.start();
+    this.nextNoteTime = ctx.currentTime + 0.5; // first note after short delay
+  }
+
+  /**
+   * Schedule the next melodic note when the time comes.
+   * Picks notes from the pentatonic scale (peaceful) or mixes in
+   * dark chromatic tones as intensity rises.
+   */
+  private scheduleMelody(intensity: number): void {
+    if (!this.ctx || !this.melodyOsc || !this.melodyEnvelope) return;
+
+    const now = this.ctx.currentTime;
+    if (now < this.nextNoteTime) return;
+
+    // Pick a note — blend peace and dark scales based on intensity
+    const mc = AC.melody;
+    const peaceNotes = mc.peaceNotes;
+    const darkNotes = mc.darkNotes;
+
+    let freq: number;
+    // At low intensity, always use peaceful pentatonic.
+    // As intensity rises, increasingly chance of a dark note.
+    if (Math.random() < intensity * 0.6 && darkNotes.length > 0) {
+      // Dark note — random pick
+      freq = darkNotes[Math.floor(Math.random() * darkNotes.length)];
+    } else {
+      // Stepwise motion: move ±1-3 steps from current index
+      const maxStep = 1 + Math.floor(Math.random() * 3);
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      this.melodyNoteIndex = clamp(
+        this.melodyNoteIndex + direction * maxStep,
+        0,
+        peaceNotes.length - 1,
+      );
+      freq = peaceNotes[this.melodyNoteIndex];
+    }
+
+    // Schedule note envelope: attack → sustain → release
+    const attackEnd = now + mc.attackTime;
+    const decayEnd = attackEnd + mc.decayTime;
+    const releaseStart = decayEnd + 0.15;
+    const releaseEnd = releaseStart + mc.releaseTime;
+
+    this.melodyOsc.frequency.setTargetAtTime(freq, now, 0.01);
+
+    const env = this.melodyEnvelope.gain;
+    env.cancelScheduledValues(now);
+    env.setValueAtTime(0, now);
+    env.linearRampToValueAtTime(1, attackEnd);
+    env.linearRampToValueAtTime(mc.sustainLevel, decayEnd);
+    env.setValueAtTime(mc.sustainLevel, releaseStart);
+    env.linearRampToValueAtTime(0, releaseEnd);
+
+    // Schedule next note
+    const interval = lerp(mc.baseInterval, mc.dangerInterval, intensity);
+    // Add slight human-feel variation (±15%)
+    const jitter = 1 + (Math.random() - 0.5) * 0.3;
+    this.nextNoteTime = now + interval * jitter;
   }
 
   private buildShimmer(): void {

@@ -75,6 +75,27 @@ export const CONFIG = {
       baseVolume: 0.02,
       dangerVolume: 0.08,
     },
+    melody: {
+      // C minor pentatonic across octaves 3–5 (peaceful)
+      peaceNotes: [
+        130.81, 155.56, 174.61, 196.0, 233.08, // C3 Eb3 F3 G3 Bb3
+        261.63, 311.13, 349.23, 392.0, 466.16, // C4 Eb4 F4 G4 Bb4
+        523.25, // C5
+      ] as readonly number[],
+      // Darker chromatic tones mixed in at high intensity
+      darkNotes: [
+        116.54, 138.59, 185.0, 246.94, // Bb2 Db3 Gb3 B3
+        277.18, 369.99, 493.88, // Db4 Gb4 B4
+      ] as readonly number[],
+      baseVolume: 0.045,
+      dangerVolume: 0.035,
+      baseInterval: 1.8, // seconds between notes at peace
+      dangerInterval: 0.7, // faster at danger
+      attackTime: 0.04,
+      decayTime: 0.25,
+      sustainLevel: 0.35,
+      releaseTime: 0.6,
+    },
     tension: {
       frequencies: [92, 35] as readonly number[],
       maxVolume: 0.1,
