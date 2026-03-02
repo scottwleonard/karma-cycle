@@ -174,15 +174,22 @@ export class ActionButton extends Container {
     }
     const w = this.btnWidth;
     const h = this.btnHeight;
-    const pulse = (Math.sin(Date.now() * 0.006) + 1) / 2; // 0..1
-    const glowAlpha = 0.25 + pulse * 0.35;
-    const spread = 4 + pulse * 4;
+    const t = Date.now() * 0.005;
+    const pulse = (Math.sin(t) + 1) / 2; // 0..1 smooth
+    const blink = Math.sin(t * 1.8) > 0.1 ? 1 : 0.3; // sharp on/off blink
+    const intensity = pulse * blink;
+    const spread = 6 + pulse * 10;
 
     this.urgentGlow.visible = true;
     this.urgentGlow.clear();
-    this.urgentGlow.roundRect(-spread, -spread, w + spread * 2, h + spread * 2, 14);
-    this.urgentGlow.fill({ color: 0xffcc00, alpha: glowAlpha * 0.3 });
-    this.urgentGlow.roundRect(-spread, -spread, w + spread * 2, h + spread * 2, 14);
-    this.urgentGlow.stroke({ color: 0xffcc00, alpha: glowAlpha, width: 2 + pulse });
+    // Outer soft glow
+    this.urgentGlow.roundRect(-spread, -spread, w + spread * 2, h + spread * 2, 16);
+    this.urgentGlow.fill({ color: 0xffaa00, alpha: intensity * 0.25 });
+    // Inner bright fill over the button
+    this.urgentGlow.roundRect(0, 0, w, h, 12);
+    this.urgentGlow.fill({ color: 0xffcc00, alpha: intensity * 0.3 });
+    // Bright border
+    this.urgentGlow.roundRect(-2, -2, w + 4, h + 4, 13);
+    this.urgentGlow.stroke({ color: 0xffdd44, alpha: 0.5 + intensity * 0.5, width: 2 + pulse * 2 });
   }
 }
