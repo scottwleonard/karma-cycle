@@ -42,7 +42,13 @@ export function getKarmaPerSecond(state: GameState): number {
     upgradeMultiplier *= 1 - healthCfg.karmaDebuff;
   }
 
-  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier;
+  // Karma bank bonus — accelerates late-game once all soul upgrades are maxed
+  const bankMultiplier =
+    state.bankedKarma > 0
+      ? 1 + Math.sqrt(state.bankedKarma) * CONFIG.karmaBank.coefficient
+      : 1;
+
+  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier * bankMultiplier;
 }
 
 /**

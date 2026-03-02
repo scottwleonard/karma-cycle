@@ -102,6 +102,9 @@ export class GameScene extends Container {
   // Rebirth preview
   private rebirthPreview!: Text;
 
+  // Karma bank display
+  private bankedKarmaText!: Text;
+
   // Karma pop tracking
   private karmaPopAccum = 0;
 
@@ -226,6 +229,19 @@ export class GameScene extends Container {
     this.lifetimeKarmaText.x = 60;
     this.lifetimeKarmaText.y = mandalaY + 200;
     this.addChild(this.lifetimeKarmaText);
+
+    this.bankedKarmaText = new Text({
+      text: '',
+      style: {
+        fontFamily: 'monospace',
+        fontSize: 20,
+        fill: 0xffcc44,
+      },
+    });
+    this.bankedKarmaText.x = 60;
+    this.bankedKarmaText.y = mandalaY + 225;
+    this.bankedKarmaText.visible = false;
+    this.addChild(this.bankedKarmaText);
 
     // === TAB CONTENT AREAS ===
     this.tabContainer = new Container();
@@ -874,6 +890,15 @@ export class GameScene extends Container {
       karmaInfo += `  |  Draining: -${formatNumber(karmaDrain)}/s`;
     }
     this.lifetimeKarmaText.text = karmaInfo;
+
+    // Karma bank display (only visible once banking has started)
+    if (state.bankedKarma > 0) {
+      const bankMult = 1 + Math.sqrt(state.bankedKarma) * CONFIG.karmaBank.coefficient;
+      this.bankedKarmaText.text = `Karma Bank: ${formatNumber(state.bankedKarma)}  (x${bankMult.toFixed(2)})`;
+      this.bankedKarmaText.visible = true;
+    } else {
+      this.bankedKarmaText.visible = false;
+    }
 
     // Need bars
     this.hungerBar.updateValue(state.needs.hunger);

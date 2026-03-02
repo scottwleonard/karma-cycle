@@ -1,6 +1,7 @@
 import { CONFIG } from '../config';
 import type { GameState } from '../state/GameState';
 import { getSoulUpgradeLevel } from './upgradeSystem';
+import { allSoulUpgradesMaxed } from './enlightenmentSystem';
 import type { EventBus } from '../types/events';
 
 export function getKarmaMultiplier(lifeNumber: number): number {
@@ -16,6 +17,11 @@ export function performRebirth(state: GameState, events: EventBus): void {
   if (state.nirvanaChallengeActive) return; // Cannot voluntarily rebirth during Nirvana trial
   const karmaEarned = getRebirthKarma(state);
   state.karma += karmaEarned;
+
+  // Bank karma for late-game acceleration once all soul upgrades are maxed
+  if (allSoulUpgradesMaxed(state)) {
+    state.bankedKarma += karmaEarned;
+  }
 
   state.lifeNumber++;
   state.karmaMultiplier = getKarmaMultiplier(state.lifeNumber);

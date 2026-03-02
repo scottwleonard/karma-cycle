@@ -24,6 +24,8 @@ export function createDefaultState(): GameState {
     autoFeedEnabled: true,
     autoRepairEnabled: true,
 
+    bankedKarma: 0,
+
     enlightenmentTier: 0,
     nirvanaUnlocked: false,
     nirvanaChallengeActive: false,

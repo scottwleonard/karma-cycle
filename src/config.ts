@@ -36,6 +36,9 @@ export const CONFIG = {
   wealth: {
     baseRate: 3.0,
   },
+  karmaBank: {
+    coefficient: 0.005, // bankMultiplier = 1 + sqrt(bankedKarma) * coefficient
+  },
   rebirth: {
     multiplierBase: 0.5,
     bonusTimeScale: 300,

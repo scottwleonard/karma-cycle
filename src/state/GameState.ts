@@ -40,6 +40,9 @@ export interface GameState {
   autoFeedEnabled: boolean;
   autoRepairEnabled: boolean;
 
+  // Karma bank (post-upgrade acceleration)
+  bankedKarma: number;
+
   // Enlightenment progression
   enlightenmentTier: number;
   nirvanaUnlocked: boolean;
