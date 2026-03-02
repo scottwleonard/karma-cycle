@@ -1,0 +1,65 @@
+export const CONFIG = {
+  karma: {
+    baseRate: 0.5,
+    lifeTimeScaling: 60,
+    soulMultiplierCoeff: 0.01,
+    deathPenalty: 0.75,
+  },
+  needs: {
+    hunger: {
+      baseDrain: 0.8,
+      drainScaling: 0.12,
+      feedAmount: 30,
+      feedCost: 10,
+      feedCostScaling: 0.1,
+      lowThreshold: 20,
+      karmaDebuff: 0.5,
+      healthDrain: 2,
+    },
+    shelter: {
+      baseDrain: 0.5,
+      drainScaling: 0.06,
+      repairAmount: 30,
+      repairCost: 15,
+      repairCostScaling: 0.05,
+      lowThreshold: 20,
+      karmaDebuff: 0.3,
+      healthDrain: 1,
+    },
+    health: {
+      regenRate: 0.3,
+      regenThreshold: 50,
+      lowThreshold: 10,
+      karmaDebuff: 0.8,
+    },
+  },
+  wealth: {
+    baseRate: 3.0,
+  },
+  rebirth: {
+    multiplierBase: 0.5,
+    bonusTimeScale: 300,
+  },
+  enlightenment: {
+    awakeningKarma: 10_000,
+    bodhiKarma: 50_000,
+    nirvanaKarma: 200_000,
+    challengeDuration: 300,
+  },
+  save: {
+    autoSaveIntervalMs: 30000,
+    maxOfflineHours: 8,
+  },
+  display: {
+    referenceWidth: 1080,
+    referenceHeight: 1920,
+    bgColor: 0x0a0a2e,
+    karmaColor: 0xffd700,
+    wealthColor: 0xc0c0c0,
+    hungerColor: 0xff8c00,
+    shelterColor: 0x20b2aa,
+    healthColor: 0xdc143c,
+    panelColor: 0x1a1a4e,
+    panelAlpha: 0.85,
+  },
+} as const;
