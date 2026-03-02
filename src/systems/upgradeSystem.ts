@@ -24,6 +24,11 @@ export function buySoulUpgrade(state: GameState, def: SoulUpgradeDefinition): bo
   const cost = getSoulUpgradeCost(def, currentLevel);
   state.karma -= cost;
 
+  // Also deduct from the karma bank if applicable
+  if (state.bankedKarma > 0) {
+    state.bankedKarma = Math.max(0, state.bankedKarma - cost);
+  }
+
   const existing = state.soulUpgrades.find((u) => u.id === def.id);
   if (existing) {
     existing.level++;

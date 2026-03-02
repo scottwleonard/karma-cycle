@@ -239,7 +239,7 @@ export class GameScene extends Container {
       },
     });
     this.bankedKarmaText.x = 60;
-    this.bankedKarmaText.y = mandalaY + 225;
+    this.bankedKarmaText.y = mandalaY + 200;
     this.bankedKarmaText.visible = false;
     this.addChild(this.bankedKarmaText);
 
@@ -885,20 +885,19 @@ export class GameScene extends Container {
     this.karmaCounter.updateValue(state.currentKarma, netKarmaRate);
     this.wealthCounter.updateValue(state.wealth, wealthRate);
 
-    let karmaInfo = `Lifetime Karma: ${formatNumber(state.karma)}`;
-    if (karmaDrain > 0) {
-      karmaInfo += `  |  Draining: -${formatNumber(karmaDrain)}/s`;
-    }
-    this.lifetimeKarmaText.text = karmaInfo;
+    // Karma bank display — replaces lifetime karma during gameplay
+    this.lifetimeKarmaText.visible = false;
 
-    // Karma bank display (only visible once banking has started)
+    let bankInfo = `Karma Bank: ${formatNumber(state.karma)}`;
     if (state.bankedKarma > 0) {
       const bankMult = 1 + Math.sqrt(state.bankedKarma) * CONFIG.karmaBank.coefficient;
-      this.bankedKarmaText.text = `Karma Bank: ${formatNumber(state.bankedKarma)}  (x${bankMult.toFixed(2)})`;
-      this.bankedKarmaText.visible = true;
-    } else {
-      this.bankedKarmaText.visible = false;
+      bankInfo += `  (x${bankMult.toFixed(2)})`;
     }
+    if (karmaDrain > 0) {
+      bankInfo += `  |  Drain: -${formatNumber(karmaDrain)}/s`;
+    }
+    this.bankedKarmaText.text = bankInfo;
+    this.bankedKarmaText.visible = true;
 
     // Need bars
     this.hungerBar.updateValue(state.needs.hunger);
