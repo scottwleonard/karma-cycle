@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Karma Cycle - Changelog</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a2e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d0d3a 0%, #1a1a4e 100%);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+
+    header p {
+      color: #8888aa;
+      font-size: 0.95rem;
+    }
+
+    header a {
+      color: #aaaacc;
+      text-decoration: none;
+      border-bottom: 1px dotted #aaaacc;
+    }
+    header a:hover { color: #ffd700; border-color: #ffd700; }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .entry {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 2.5rem;
+      border-left: 2px solid #2a2a5e;
+    }
+
+    .entry::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffd700;
+    }
+
+    .entry-date {
+      font-size: 0.8rem;
+      color: #7777aa;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .entry-version {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15em 0.5em;
+      border-radius: 4px;
+      margin-right: 0.4em;
+      vertical-align: middle;
+    }
+    .tag-new       { background: #1a3a1a; color: #44cc44; }
+    .tag-improved  { background: #2a2a1a; color: #ccaa44; }
+    .tag-fixed     { background: #1a1a3a; color: #4488cc; }
+    .tag-balance   { background: #2a1a2a; color: #cc66aa; }
+
+    .entry ul {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    .entry li {
+      position: relative;
+      padding-left: 1.2rem;
+      margin-bottom: 0.4rem;
+      color: #ccccdd;
+      font-size: 0.95rem;
+    }
+
+    .entry li::before {
+      content: '\2022';
+      position: absolute;
+      left: 0;
+      color: #555577;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #555577;
+      font-size: 0.8rem;
+      border-top: 1px solid #1a1a3e;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Karma Cycle</h1>
+    <p>Product Changelog &mdash; <a href="/">Play the game</a></p>
+  </header>
+
+  <main>
+
+    <article class="entry">
+      <div class="entry-date">March 1, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-improved">Improved</span>
+        Urgent Need Indicators
+      </div>
+      <ul>
+        <li>Feed and Repair buttons now pulse with a golden glow when the corresponding need drops below 60%</li>
+        <li>Glow only appears when you can afford the action, serving as a clear call-to-action</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">March 1, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Enlightenment Win Condition
+      </div>
+      <ul>
+        <li>Three-tier enlightenment progression: Awakening (10k karma), Bodhi (50k karma), and Nirvana (200k karma + all soul upgrades maxed)</li>
+        <li>Mandala gains glowing rings as you reach each tier &mdash; blue, violet, then white</li>
+        <li>Milestone celebration popups with particle bursts when reaching Awakening and Bodhi</li>
+        <li>Nirvana Challenge: survive 5 minutes with no material upgrades to prove your soul's resilience</li>
+        <li>Victory screen with lifetime stats upon achieving Nirvana</li>
+        <li>Death during the Nirvana trial fails the challenge, but you can retry</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">March 1, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-fixed">Fixed</span>
+        Rebirth at Zero Karma
+      </div>
+      <ul>
+        <li>Players can now rebirth even when karma is exactly zero</li>
+        <li>Previously, negative karma per second with zero karma made it impossible to rebirth</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">March 1, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-balance">Balance</span>
+        <span class="tag tag-improved">Improved</span>
+        Faster Gameplay &amp; Visual Juice
+      </div>
+      <ul>
+        <li>Karma base rate increased 5x (0.1 &rarr; 0.5/s) and wealth rate tripled (1 &rarr; 3/s)</li>
+        <li>Hunger and shelter drain faster, creating more active decision-making</li>
+        <li>Life events now trigger every 2&ndash;5 seconds instead of 3&ndash;8</li>
+        <li>Number popups are larger with scaling based on value, black outlines, and pop-in animation</li>
+        <li>Mandala now has a breathing glow that brightens with karma rate</li>
+        <li>Particle bursts fire on Feed, Repair, Rebirth, and upgrades with multiple color variants</li>
+        <li>Mandala pulses on button actions for tactile feedback</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">February 28, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Unified Layout &amp; Visual Redesign
+      </div>
+      <ul>
+        <li>Combined Game and Upgrades into a single scrollable view with tabbed sections</li>
+        <li>Higher contrast design with more vibrant colors throughout</li>
+        <li>Clearer visual distinction between purchased, affordable, and unaffordable upgrades</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">February 28, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Auto-Feed &amp; Auto-Repair
+      </div>
+      <ul>
+        <li>New soul upgrades: Auto Feed and Auto Repair</li>
+        <li>Once unlocked, toggle switches appear to enable/disable automatic need management</li>
+        <li>Auto-actions trigger when the need drops below threshold and you have enough wealth</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">February 28, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Prestige Soul Upgrades
+      </div>
+      <ul>
+        <li>Spend karma across lives to unlock permanent soul upgrades</li>
+        <li>Enlightened Mind, Resilient Body, Worldly Fortune, and Meditation</li>
+        <li>Upgrades persist through rebirth and death</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">February 28, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Life Events &amp; Material Upgrades
+      </div>
+      <ul>
+        <li>Random life events that affect karma, wealth, hunger, and shelter</li>
+        <li>Material upgrades create a Faustian bargain: wealth and comfort at the cost of karma drain</li>
+        <li>6 material upgrades with escalating tradeoffs (Fine Clothing, Ornate Home, Feast, etc.)</li>
+      </ul>
+    </article>
+
+    <article class="entry">
+      <div class="entry-date">February 28, 2026</div>
+      <div class="entry-version">
+        <span class="tag tag-new">New</span>
+        Initial Release
+      </div>
+      <ul>
+        <li>Core game loop: earn karma through virtuous living across the cycle of birth and rebirth</li>
+        <li>Needs system: hunger, shelter, and health must be managed to survive</li>
+        <li>Wealth generation and spending on Feed and Repair actions</li>
+        <li>Death and rebirth mechanics with karma multiplier progression</li>
+        <li>Animated mandala visualization that responds to game state</li>
+        <li>Particle effects and floating number popups</li>
+        <li>Local save system with offline progress</li>
+      </ul>
+    </article>
+
+  </main>
+
+  <footer>
+    Karma Cycle &mdash; Built with TypeScript, Vite &amp; PixiJS
+  </footer>
+</body>
+</html>

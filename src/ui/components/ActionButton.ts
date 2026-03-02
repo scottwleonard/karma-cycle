@@ -8,6 +8,8 @@ export class ActionButton extends Container {
   private costText: Text;
   private checkmark: Text;
   private _state: ButtonState = 'available';
+  private _urgent = false;
+  private urgentGlow: Graphics;
   private btnWidth: number;
   private btnHeight: number;
   private baseColor: number;
@@ -25,6 +27,10 @@ export class ActionButton extends Container {
     this.btnWidth = width;
     this.btnHeight = height;
     this.baseColor = color;
+
+    this.urgentGlow = new Graphics();
+    this.urgentGlow.visible = false;
+    this.addChild(this.urgentGlow);
 
     this.bg = new Graphics();
     this.addChild(this.bg);
@@ -151,5 +157,32 @@ export class ActionButton extends Container {
   /** Backwards-compatible shorthand */
   setEnabled(enabled: boolean): void {
     this.setButtonState(enabled ? 'available' : 'disabled');
+  }
+
+  /** Toggle urgent pulsing highlight to draw attention */
+  setUrgent(urgent: boolean): void {
+    if (this._urgent === urgent) return;
+    this._urgent = urgent;
+    this.urgentGlow.visible = urgent;
+  }
+
+  /** Call each frame to animate the urgent glow */
+  updateUrgentGlow(): void {
+    if (!this._urgent || this._state !== 'available') {
+      this.urgentGlow.visible = false;
+      return;
+    }
+    const w = this.btnWidth;
+    const h = this.btnHeight;
+    const pulse = (Math.sin(Date.now() * 0.006) + 1) / 2; // 0..1
+    const glowAlpha = 0.25 + pulse * 0.35;
+    const spread = 4 + pulse * 4;
+
+    this.urgentGlow.visible = true;
+    this.urgentGlow.clear();
+    this.urgentGlow.roundRect(-spread, -spread, w + spread * 2, h + spread * 2, 14);
+    this.urgentGlow.fill({ color: 0xffcc00, alpha: glowAlpha * 0.3 });
+    this.urgentGlow.roundRect(-spread, -spread, w + spread * 2, h + spread * 2, 14);
+    this.urgentGlow.stroke({ color: 0xffcc00, alpha: glowAlpha, width: 2 + pulse });
   }
 }

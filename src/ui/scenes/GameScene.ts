@@ -862,14 +862,18 @@ export class GameScene extends Container {
     this.shelterBar.updateValue(state.needs.shelter);
     this.healthBar.updateValue(state.needs.health);
 
-    // Button costs
+    // Button costs + urgent highlight when needs are low
     const feedCost = getFeedCost(state);
     this.feedButton.setCost(`${feedCost} wealth`);
     this.feedButton.setEnabled(state.wealth >= feedCost && state.isAlive);
+    this.feedButton.setUrgent(state.isAlive && state.needs.hunger < 60);
+    this.feedButton.updateUrgentGlow();
 
     const repairCost = getRepairCost(state);
     this.repairButton.setCost(`${repairCost} wealth`);
     this.repairButton.setEnabled(state.wealth >= repairCost && state.isAlive);
+    this.repairButton.setUrgent(state.isAlive && state.needs.shelter < 60);
+    this.repairButton.updateUrgentGlow();
 
     // Rebirth button — disabled during Nirvana challenge
     const rebirthKarma = getRebirthKarma(state);
