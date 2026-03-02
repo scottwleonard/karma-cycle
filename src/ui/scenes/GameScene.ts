@@ -100,7 +100,6 @@ export class GameScene extends Container {
   private eventLog!: EventLog;
 
   // Rebirth preview
-  private rebirthPreview!: Text;
 
   // Karma bank display
   private bankedKarmaText!: Text;
@@ -434,18 +433,6 @@ export class GameScene extends Container {
     this.rebirthButton.y = btnY;
     this.gameView.addChild(this.rebirthButton);
 
-    // Rebirth preview — sits beside rebirth button
-    this.rebirthPreview = new Text({
-      text: '',
-      style: {
-        fontFamily: 'monospace',
-        fontSize: 20,
-        fill: 0xbb88ff,
-      },
-    });
-    this.rebirthPreview.x = 50 + btnW * 2;
-    this.rebirthPreview.y = btnY + 86;
-    this.gameView.addChild(this.rebirthPreview);
 
     // Auto toggles (hidden until soul upgrade purchased)
     const toggleY = btnY + 86;
@@ -921,9 +908,6 @@ export class GameScene extends Container {
     const rebirthKarma = getRebirthKarma(state);
     this.rebirthButton.setCost(`+${formatNumber(rebirthKarma)} karma`);
     this.rebirthButton.setEnabled(state.isAlive && !state.nirvanaChallengeActive);
-    this.rebirthPreview.text = state.nirvanaChallengeActive
-      ? 'Trial in progress'
-      : `Next: x${(1 + Math.log2(2 + state.lifeNumber) * 0.5).toFixed(2)}`;
 
     // Auto toggles — only visible when unlocked
     const hasAutoFeed = getSoulUpgradeLevel(state, 'auto_feed') > 0;
