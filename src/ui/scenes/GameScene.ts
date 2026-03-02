@@ -11,6 +11,7 @@ import { Mandala } from '../components/Mandala';
 import { ParticleField } from '../components/ParticleField';
 import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
+import type { AudioManager } from '../../audio/AudioManager';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
@@ -119,12 +120,27 @@ export class GameScene extends Container {
   // Victory screen
   private victoryOverlay!: Container;
 
-  constructor(engine: GameEngine, layout: LayoutInfo) {
+  // Audio
+  private audioManager: AudioManager;
+  private audioInitialized = false;
+
+  constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
     this.engine = engine;
     this.layout = layout;
+    this.audioManager = audioManager;
     this.buildUI();
     this.setupEvents();
+
+    // Init audio on first user interaction (browser autoplay policy)
+    const initAudioOnce = () => {
+      if (!this.audioInitialized) {
+        this.audioManager.init();
+        this.audioInitialized = true;
+        document.removeEventListener('pointerdown', initAudioOnce);
+      }
+    };
+    document.addEventListener('pointerdown', initAudioOnce);
 
     // Restore enlightenment visuals from saved state
     this.mandala.setEnlightenmentTier(engine.state.enlightenmentTier);
@@ -828,6 +844,9 @@ export class GameScene extends Container {
     const netKarmaRate = getNetKarmaPerSecond(state);
     const wealthRate = getWealthPerSecond(state);
     const karmaDrain = getKarmaDrainPerSecond(state);
+
+    // Audio — responds to game state intensity
+    this.audioManager.update(state, netKarmaRate);
 
     // Header
     let headerStr = `Life #${state.lifeNumber}  |  ${formatDuration(state.lifeTimeElapsed)}  |  x${state.karmaMultiplier.toFixed(2)}`;

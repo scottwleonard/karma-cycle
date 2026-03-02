@@ -5,6 +5,7 @@ import { SaveManager } from './saves/saveManager';
 import { applyOfflineProgress } from './engine/offlineProgress';
 import { calculateLayout } from './ui/layout';
 import { GameScene } from './ui/scenes/GameScene';
+import { AudioManager } from './audio/AudioManager';
 
 async function main() {
   const app = new Application();
@@ -35,9 +36,10 @@ async function main() {
     );
   }
 
-  // Create layout and scene
+  // Create layout, audio, and scene
   const layout = calculateLayout(app.screen.width, app.screen.height);
-  const scene = new GameScene(engine, layout);
+  const audioManager = new AudioManager();
+  const scene = new GameScene(engine, layout, audioManager);
   app.stage.addChild(scene);
 
   // Game loop
