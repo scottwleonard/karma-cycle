@@ -9,8 +9,7 @@ export function getKarmaMultiplier(lifeNumber: number): number {
 }
 
 export function getRebirthKarma(state: GameState): number {
-  const timeBonus = 1 + state.lifeTimeElapsed / CONFIG.rebirth.bonusTimeScale;
-  return state.currentKarma * timeBonus;
+  return state.currentKarma;
 }
 
 export function performRebirth(state: GameState, events: EventBus): void {
