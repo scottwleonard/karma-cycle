@@ -13,7 +13,6 @@ import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
-import { clearLocal } from '../../saves/localStorage';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
@@ -401,7 +400,9 @@ export class GameScene extends Container {
     this.resetOverlay.addChild(resetWarning);
 
     const confirmResetBtn = new ActionButton('Yes, Reset Everything', 450, 80, 0xaa2222, () => {
-      clearLocal();
+      // Set a flag so main.ts clears save data on reload
+      // (beforeunload would otherwise re-save the current state)
+      sessionStorage.setItem('karma_cycle_reset', '1');
       window.location.reload();
     });
     confirmResetBtn.x = gw / 2 - 225;

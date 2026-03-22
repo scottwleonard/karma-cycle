@@ -21,8 +21,12 @@ async function main() {
   if (!container) throw new Error('No #app element found');
   container.appendChild(app.canvas);
 
-  // Load or create game state
+  // Load or create game state (reset flag clears save before loading)
   const saveManager = new SaveManager();
+  if (sessionStorage.getItem('karma_cycle_reset')) {
+    sessionStorage.removeItem('karma_cycle_reset');
+    saveManager.reset();
+  }
   const state = saveManager.load();
 
   // Create engine
