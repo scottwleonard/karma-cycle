@@ -14,6 +14,7 @@ import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
 import { submitSuggestion } from '../submitSuggestion';
+import { clearLocal } from '../../saves/localStorage';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
@@ -130,6 +131,9 @@ export class GameScene extends Container {
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
   private loadTime = Date.now();
+
+  // Reset confirmation
+  private resetOverlay!: Container;
 
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
@@ -369,6 +373,50 @@ export class GameScene extends Container {
     this.victoryOverlay = new Container();
     this.victoryOverlay.visible = false;
     this.addChild(this.victoryOverlay);
+
+    // === RESET CONFIRMATION OVERLAY ===
+    this.resetOverlay = new Container();
+    this.resetOverlay.visible = false;
+    const resetBg = new Graphics();
+    resetBg.rect(0, 0, gw, CONFIG.display.referenceHeight);
+    resetBg.fill({ color: 0x000000, alpha: 0.9 });
+    resetBg.eventMode = 'static';
+    this.resetOverlay.addChild(resetBg);
+
+    const resetTitle = new Text({
+      text: 'Reset Game?',
+      style: { fontFamily: 'monospace', fontSize: 52, fill: 0xff3344, fontWeight: 'bold' },
+    });
+    resetTitle.anchor.set(0.5);
+    resetTitle.x = gw / 2;
+    resetTitle.y = 650;
+    this.resetOverlay.addChild(resetTitle);
+
+    const resetWarning = new Text({
+      text: 'This will erase ALL progress.\nThis cannot be undone.',
+      style: { fontFamily: 'monospace', fontSize: 28, fill: 0xcccccc, align: 'center' },
+    });
+    resetWarning.anchor.set(0.5);
+    resetWarning.x = gw / 2;
+    resetWarning.y = 750;
+    this.resetOverlay.addChild(resetWarning);
+
+    const confirmResetBtn = new ActionButton('Yes, Reset Everything', 450, 80, 0xaa2222, () => {
+      clearLocal();
+      window.location.reload();
+    });
+    confirmResetBtn.x = gw / 2 - 225;
+    confirmResetBtn.y = 860;
+    this.resetOverlay.addChild(confirmResetBtn);
+
+    const cancelResetBtn = new ActionButton('Cancel', 250, 70, 0x3a3a6e, () => {
+      this.resetOverlay.visible = false;
+    });
+    cancelResetBtn.x = gw / 2 - 125;
+    cancelResetBtn.y = 960;
+    this.resetOverlay.addChild(cancelResetBtn);
+
+    this.addChild(this.resetOverlay);
 
     // === SUGGEST OVERLAY ===
     this.suggestOverlay = new SuggestOverlay(gw, (text) => {
@@ -713,6 +761,14 @@ export class GameScene extends Container {
     this.seekNirvanaButton.y = 60 + SOUL_UPGRADES.length * 85 + 20;
     this.seekNirvanaButton.visible = false;
     this.soulView.addChild(this.seekNirvanaButton);
+
+    // Reset Game button — bottom of soul view
+    const resetBtn = new ActionButton('Reset Game', 300, 60, 0x882222, () => {
+      this.resetOverlay.visible = true;
+    });
+    resetBtn.x = gw / 2 - 150;
+    resetBtn.y = 60 + SOUL_UPGRADES.length * 85 + 130;
+    this.soulView.addChild(resetBtn);
   }
 
   private switchTab(tab: TabName): void {
