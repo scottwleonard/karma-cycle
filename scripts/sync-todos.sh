@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 #
 # sync-todos.sh — Post-commit hook script
-# Syncs todo.md items with GitHub Issues and creates issues for untracked commits.
+#
+# Keeps four artifacts aligned from todo.md as the single source of truth:
+#   1. GitHub Issues  — developer-level detail (from `issue:` lines)
+#   2. Changelog HTML — player-level descriptions (from `changelog:` lines)
+#   3. todo.md        — planning shorthand (checkbox titles)
+#   4. Commit log     — stays as-is (developer writes these naturally)
 #
 # Requirements: gh (GitHub CLI) authenticated
 #
 set -euo pipefail
 
 TODO_FILE="todo.md"
+CHANGELOG_FILE="public/changelog/index.html"
 COMMIT_SHA=$(git rev-parse HEAD)
 COMMIT_MSG=$(git log -1 --pretty=%s "$COMMIT_SHA")
-COMMIT_URL="" # populated later if we can resolve the repo URL
+COMMIT_URL=""
 
 # ── Preflight ──────────────────────────────────────────────────────────────────
 
@@ -35,106 +41,220 @@ fi
 COMMIT_URL="https://github.com/${REPO}/commit/${COMMIT_SHA}"
 CURRENT_USER=$(gh api user -q '.login' 2>/dev/null || echo "")
 
-echo "[sync-todos] Syncing todo.md with GitHub Issues for ${REPO}..."
+echo "[sync-todos] Syncing todo.md ↔ Issues ↔ Changelog for ${REPO}..."
 
-# ── Parse todo.md ──────────────────────────────────────────────────────────────
+# ── Parse todo.md (multi-line format) ─────────────────────────────────────────
+
+MODIFIED=false
+CHANGELOG_ENTRIES=""
 
 if [[ ! -f "$TODO_FILE" ]]; then
   echo "[sync-todos] No todo.md found — skipping todo sync."
 else
-  MODIFIED=false
+  # Parse todo items with their metadata blocks
+  # State machine: read checkbox lines, then collect indented metadata
+  current_title=""
+  current_checked=""
+  current_issue_num=""
+  current_issue_body=""
+  current_changelog=""
+  current_tag="new"
+  in_item=false
+  current_meta_key=""
 
-  # Process each todo line. We use a temp file to allow in-place updates.
-  TMPFILE=$(mktemp)
-  cp "$TODO_FILE" "$TMPFILE"
+  flush_item() {
+    if [[ -z "$current_title" ]]; then
+      return
+    fi
 
-  while IFS= read -r line; do
-    # Match: - [ ] Some title (#123)  or  - [ ] Some title  or  - [x] Some title (#123)
-    if [[ "$line" =~ ^[[:space:]]*-[[:space:]]\[([[:space:]x])\][[:space:]]+(.*) ]]; then
-      checked="${BASH_REMATCH[1]}"
-      rest="${BASH_REMATCH[2]}"
-
-      # Extract issue number if present
-      issue_num=""
-      title="$rest"
-      if [[ "$rest" =~ ^(.*)[[:space:]]+\(#([0-9]+)\)[[:space:]]*$ ]]; then
-        title="${BASH_REMATCH[1]}"
-        issue_num="${BASH_REMATCH[2]}"
+    if [[ "$current_checked" == "x" ]]; then
+      # ── Completed: close issue, queue changelog entry ──
+      if [[ -n "$current_issue_num" ]]; then
+        state=$(gh issue view "$current_issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null || echo "")
+        if [[ "$state" == "OPEN" ]]; then
+          gh issue close "$current_issue_num" --repo "$REPO" \
+            --comment "Completed. Commit: ${COMMIT_URL}" 2>/dev/null || true
+          echo "[sync-todos] Closed issue #${current_issue_num}: ${current_title}"
+        fi
       fi
 
-      # Trim whitespace from title
-      title=$(echo "$title" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-      if [[ "$checked" == "x" ]]; then
-        # ── Completed item: close the issue if it exists and is open ──
-        if [[ -n "$issue_num" ]]; then
-          state=$(gh issue view "$issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null || echo "")
-          if [[ "$state" == "OPEN" ]]; then
-            gh issue close "$issue_num" --repo "$REPO" --comment "Closed via todo.md sync. Commit: ${COMMIT_URL}" 2>/dev/null || true
-            echo "[sync-todos] Closed issue #${issue_num}: ${title}"
-          fi
+      # Queue changelog entry if we have player-facing text
+      if [[ -n "$current_changelog" ]]; then
+        CHANGELOG_ENTRIES+="ENTRY|${current_tag}|${current_title}|${current_changelog}"$'\n'
+      fi
+    else
+      # ── Open: create issue if not linked ──
+      if [[ -z "$current_issue_num" ]]; then
+        # Build issue body from metadata (developer-facing)
+        body="## ${current_title}"$'\n\n'
+        if [[ -n "$current_issue_body" ]]; then
+          body+="${current_issue_body}"$'\n\n'
         fi
-      else
-        # ── Open item: create issue if not linked yet ──
-        if [[ -z "$issue_num" ]]; then
-          new_issue=$(gh issue create \
-            --repo "$REPO" \
-            --title "$title" \
-            --body "Tracked in \`todo.md\`. Created automatically by post-commit sync." \
-            ${CURRENT_USER:+--assignee "$CURRENT_USER"} \
-            2>/dev/null || echo "")
+        body+="---"$'\n'
+        body+="Tracked in \`todo.md\`. Synced by post-commit hook."
 
-          if [[ -n "$new_issue" ]]; then
-            # Extract issue number from URL (https://github.com/owner/repo/issues/42)
-            new_num=$(echo "$new_issue" | grep -oE '[0-9]+$')
-            if [[ -n "$new_num" ]]; then
-              # Update the line in todo.md to include the issue number
-              escaped_title=$(printf '%s\n' "$title" | sed 's/[&/\]/\\&/g')
-              sed -i "s|- \[ \] ${escaped_title}|- [ ] ${title} (#${new_num})|" "$TODO_FILE"
-              MODIFIED=true
-              echo "[sync-todos] Created issue #${new_num}: ${title}"
-            fi
+        new_issue=$(gh issue create \
+          --repo "$REPO" \
+          --title "$current_title" \
+          --body "$body" \
+          ${CURRENT_USER:+--assignee "$CURRENT_USER"} \
+          2>/dev/null || echo "")
+
+        if [[ -n "$new_issue" ]]; then
+          new_num=$(echo "$new_issue" | grep -oE '[0-9]+$')
+          if [[ -n "$new_num" ]]; then
+            # Append (#N) to the checkbox line in todo.md
+            escaped_title=$(printf '%s\n' "$current_title" | sed 's/[&/\]/\\&/g')
+            sed -i "s|- \[ \] ${escaped_title}$|- [ ] ${current_title} (#${new_num})|" "$TODO_FILE"
+            MODIFIED=true
+            echo "[sync-todos] Created issue #${new_num}: ${current_title}"
           fi
         fi
       fi
     fi
-  done < "$TMPFILE"
-  rm -f "$TMPFILE"
+  }
 
-  # If we modified todo.md, amend the commit to include the updated file
+  # Read todo.md line by line
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # Check for a checkbox line
+    if [[ "$line" =~ ^[[:space:]]*-[[:space:]]\[([[:space:]x])\][[:space:]]+(.*) ]]; then
+      # Flush previous item
+      flush_item
+
+      # Start new item
+      current_checked="${BASH_REMATCH[1]}"
+      rest="${BASH_REMATCH[2]}"
+      current_issue_num=""
+      current_issue_body=""
+      current_changelog=""
+      current_tag="new"
+      current_meta_key=""
+      in_item=true
+
+      # Extract issue number if present: "Title (#123)"
+      if [[ "$rest" =~ ^(.*)[[:space:]]+\(#([0-9]+)\)[[:space:]]*$ ]]; then
+        current_title="${BASH_REMATCH[1]}"
+        current_issue_num="${BASH_REMATCH[2]}"
+      else
+        current_title=$(echo "$rest" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      fi
+
+    elif [[ "$in_item" == true ]] && [[ "$line" =~ ^[[:space:]]+- ]]; then
+      # Indented metadata line under a checkbox item
+      meta_content=$(echo "$line" | sed 's/^[[:space:]]*- //')
+
+      if [[ "$meta_content" =~ ^issue:[[:space:]]*(.*) ]]; then
+        current_meta_key="issue"
+        current_issue_body="${BASH_REMATCH[1]}"
+      elif [[ "$meta_content" =~ ^changelog:[[:space:]]*(.*) ]]; then
+        current_meta_key="changelog"
+        current_changelog="${BASH_REMATCH[1]}"
+      elif [[ "$meta_content" =~ ^tag:[[:space:]]*(.*) ]]; then
+        current_meta_key="tag"
+        current_tag=$(echo "${BASH_REMATCH[1]}" | sed 's/[[:space:]]*$//')
+      else
+        # Continuation line for multi-line metadata
+        trimmed=$(echo "$meta_content" | sed 's/^[[:space:]]*//')
+        case "$current_meta_key" in
+          issue)    current_issue_body+=" ${trimmed}" ;;
+          changelog) current_changelog+=" ${trimmed}" ;;
+        esac
+      fi
+
+    elif [[ "$line" =~ ^[[:space:]]*$ ]] || [[ "$line" =~ ^## ]] || [[ "$line" =~ ^--- ]]; then
+      # Blank line, heading, or separator — end of current item
+      if [[ "$in_item" == true ]]; then
+        flush_item
+        in_item=false
+        current_title=""
+        current_meta_key=""
+      fi
+    fi
+  done < "$TODO_FILE"
+
+  # Flush last item
+  flush_item
+
+  # ── Update changelog if we have new entries ─────────────────────────────────
+
+  if [[ -n "$CHANGELOG_ENTRIES" ]] && [[ -f "$CHANGELOG_FILE" ]]; then
+    TODAY=$(date +"%B %-d, %Y")
+
+    # Build HTML for new entries
+    new_html=""
+    while IFS='|' read -r _ tag title changelog_text; do
+      [[ -z "$title" ]] && continue
+
+      # Map tag to CSS class
+      tag_class="tag-new"
+      tag_label="New"
+      case "$tag" in
+        improved) tag_class="tag-improved"; tag_label="Improved" ;;
+        fixed)    tag_class="tag-fixed";    tag_label="Fixed" ;;
+        balance)  tag_class="tag-balance";  tag_label="Balance" ;;
+        new)      tag_class="tag-new";      tag_label="New" ;;
+      esac
+
+      new_html+="
+    <article class=\"entry\">
+      <div class=\"entry-date\">${TODAY}</div>
+      <div class=\"entry-version\">
+        <span class=\"tag ${tag_class}\">${tag_label}</span>
+        ${title}
+      </div>
+      <ul>
+        <li>${changelog_text}</li>
+      </ul>
+    </article>
+"
+    done <<< "$CHANGELOG_ENTRIES"
+
+    if [[ -n "$new_html" ]]; then
+      # Insert after <main> tag
+      escaped_html=$(printf '%s' "$new_html" | sed 's/[&/\]/\\&/g; s/$/\\/' | sed '$ s/\\$//')
+      sed -i "/<main>/a\\${escaped_html}" "$CHANGELOG_FILE"
+      git add "$CHANGELOG_FILE"
+      MODIFIED=true
+      echo "[sync-todos] Added changelog entries."
+    fi
+  fi
+
+  # ── Amend commit if todo.md or changelog were updated ───────────────────────
+
   if [[ "$MODIFIED" == true ]]; then
     git add "$TODO_FILE"
     git commit --amend --no-edit --no-verify 2>/dev/null || true
-    echo "[sync-todos] Updated todo.md with new issue numbers."
+    echo "[sync-todos] Amended commit with updated todo.md / changelog."
   fi
 fi
 
-# ── Create issue for commits not linked to an issue ────────────────────────────
+# ── Retroactive issue for untracked commits ────────────────────────────────────
 
-# Check if the commit message references an issue (#N) or was made by this script
+# Skip if commit already references an issue or is from this script
 if [[ "$COMMIT_MSG" =~ \#[0-9]+ ]] || [[ "$COMMIT_MSG" == *"[sync-todos]"* ]]; then
-  echo "[sync-todos] Commit already references an issue — skipping."
+  echo "[sync-todos] Commit already references an issue."
   exit 0
 fi
 
-# Check if commit is part of a PR that references an issue
-# (we only check the commit message itself for speed)
-
 echo "[sync-todos] Commit has no linked issue — creating one."
 
-# Determine changed files for context
 changed_files=$(git diff-tree --no-commit-id --name-only -r "$COMMIT_SHA" | head -20)
 
-issue_body="Retroactively created for commit ${COMMIT_URL}
+# Issue body is developer-facing: technical detail
+issue_body="## Retroactive issue
 
-**Commit message:** ${COMMIT_MSG}
+Commit: ${COMMIT_URL}
 
-**Changed files:**
+### What changed
 \`\`\`
 ${changed_files}
 \`\`\`
 
-*Auto-created by post-commit sync — this work was done without a pre-existing issue.*"
+### Context
+${COMMIT_MSG}
+
+---
+*Auto-created by post-commit sync for a commit made without a pre-existing issue.*"
 
 new_issue=$(gh issue create \
   --repo "$REPO" \
@@ -145,11 +265,9 @@ new_issue=$(gh issue create \
 
 if [[ -n "$new_issue" ]]; then
   new_num=$(echo "$new_issue" | grep -oE '[0-9]+$')
-  echo "[sync-todos] Created and closed issue #${new_num} for this commit."
-
-  # Close it immediately since the work is already done
+  echo "[sync-todos] Created and closed issue #${new_num}."
   gh issue close "$new_num" --repo "$REPO" \
-    --comment "Work already completed in commit ${COMMIT_URL}. Issue created retroactively." \
+    --comment "Work completed in ${COMMIT_URL}." \
     2>/dev/null || true
 fi
 
