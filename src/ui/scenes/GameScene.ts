@@ -393,8 +393,8 @@ export class GameScene extends Container {
     this.resetOverlay.addChild(resetTitle);
 
     const resetWarning = new Text({
-      text: 'This will erase ALL progress.\nThis cannot be undone.',
-      style: { fontFamily: 'monospace', fontSize: 28, fill: 0xcccccc, align: 'center' },
+      text: 'This will erase:\n\n- All karma and wealth\n- Soul upgrades and life upgrades\n- Karma Bank balance\n- Enlightenment progress\n- Life count and history\n\nThis cannot be undone.',
+      style: { fontFamily: 'monospace', fontSize: 24, fill: 0xcccccc, align: 'center', lineHeight: 34 },
     });
     resetWarning.anchor.set(0.5);
     resetWarning.x = gw / 2;
@@ -406,14 +406,14 @@ export class GameScene extends Container {
       window.location.reload();
     });
     confirmResetBtn.x = gw / 2 - 225;
-    confirmResetBtn.y = 860;
+    confirmResetBtn.y = 1000;
     this.resetOverlay.addChild(confirmResetBtn);
 
     const cancelResetBtn = new ActionButton('Cancel', 250, 70, 0x3a3a6e, () => {
       this.resetOverlay.visible = false;
     });
     cancelResetBtn.x = gw / 2 - 125;
-    cancelResetBtn.y = 960;
+    cancelResetBtn.y = 1100;
     this.resetOverlay.addChild(cancelResetBtn);
 
     this.addChild(this.resetOverlay);
@@ -424,13 +424,20 @@ export class GameScene extends Container {
     });
     this.addChild(this.suggestOverlay);
 
-    // Suggest button (top-right header area)
-    const suggestBtn = new ActionButton('Suggest', 180, 50, 0x886622, () => {
+    // Header buttons (top-right)
+    const suggestBtn = new ActionButton('Suggest', 170, 50, 0x886622, () => {
       this.suggestOverlay.show(this.layout);
     });
-    suggestBtn.x = gw - 220;
+    suggestBtn.x = gw - 190;
     suggestBtn.y = 25;
     this.addChild(suggestBtn);
+
+    const resetBtn = new ActionButton('Reset', 140, 50, 0x882222, () => {
+      this.resetOverlay.visible = true;
+    });
+    resetBtn.x = gw - 350;
+    resetBtn.y = 25;
+    this.addChild(resetBtn);
   }
 
   private buildGameView(gw: number): void {
@@ -762,13 +769,6 @@ export class GameScene extends Container {
     this.seekNirvanaButton.visible = false;
     this.soulView.addChild(this.seekNirvanaButton);
 
-    // Reset Game button — bottom of soul view
-    const resetBtn = new ActionButton('Reset Game', 300, 60, 0x882222, () => {
-      this.resetOverlay.visible = true;
-    });
-    resetBtn.x = gw / 2 - 150;
-    resetBtn.y = 60 + SOUL_UPGRADES.length * 85 + 130;
-    this.soulView.addChild(resetBtn);
   }
 
   private switchTab(tab: TabName): void {
