@@ -12,6 +12,8 @@ import { ParticleField } from '../components/ParticleField';
 import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
+import { SuggestOverlay } from '../components/SuggestOverlay';
+import { submitSuggestion } from '../submitSuggestion';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
@@ -124,6 +126,10 @@ export class GameScene extends Container {
 
   // Audio
   private audioManager: AudioManager;
+
+  // Community suggest
+  private suggestOverlay!: SuggestOverlay;
+  private loadTime = Date.now();
 
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
@@ -363,6 +369,20 @@ export class GameScene extends Container {
     this.victoryOverlay = new Container();
     this.victoryOverlay.visible = false;
     this.addChild(this.victoryOverlay);
+
+    // === SUGGEST OVERLAY ===
+    this.suggestOverlay = new SuggestOverlay(gw, (text) => {
+      submitSuggestion(text, this.loadTime);
+    });
+    this.addChild(this.suggestOverlay);
+
+    // Suggest button (top-right header area)
+    const suggestBtn = new ActionButton('Suggest', 180, 50, 0x886622, () => {
+      this.suggestOverlay.show(this.layout);
+    });
+    suggestBtn.x = gw - 220;
+    suggestBtn.y = 25;
+    this.addChild(suggestBtn);
   }
 
   private buildGameView(gw: number): void {

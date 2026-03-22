@@ -1,0 +1,38 @@
+name: Implement Community Suggestion
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  implement:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          label_trigger: "approved"
+          base_branch: "main"
+          branch_prefix: "community/"
+          prompt: |
+            Implement the following community suggestion for the Karma Cycle game.
+            Read CLAUDE.md for project context.
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Requirements:
+            - Keep changes minimal and focused
+            - Add new files where possible rather than heavily modifying existing ones
+            - Do not refactor existing systems
+            - Ensure `npm run build` passes with no errors
+            - Reference issue #${{ github.event.issue.number }} in the PR description
