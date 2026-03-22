@@ -1,0 +1,163 @@
+name: Sync todo.md → GitHub Issues
+
+on:
+  push:
+    paths:
+      - todo.md
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync todos to issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          TODO_FILE="todo.md"
+          MODIFIED=false
+
+          if [[ ! -f "$TODO_FILE" ]]; then
+            echo "No todo.md found"
+            exit 0
+          fi
+
+          CURRENT_USER="${{ github.actor }}"
+
+          echo "Syncing todo.md → GitHub Issues for ${REPO}..."
+
+          # State machine to parse todo.md
+          current_title=""
+          current_checked=""
+          current_issue_num=""
+          current_issue_body=""
+          current_changelog=""
+          current_tag="new"
+          in_item=false
+          current_meta_key=""
+
+          flush_item() {
+            if [[ -z "$current_title" ]]; then
+              return
+            fi
+
+            if [[ "$current_checked" == "x" ]]; then
+              # Completed: close issue if open
+              if [[ -n "$current_issue_num" ]]; then
+                state=$(gh issue view "$current_issue_num" --repo "$REPO" --json state -q '.state' 2>/dev/null || echo "")
+                if [[ "$state" == "OPEN" ]]; then
+                  gh issue close "$current_issue_num" --repo "$REPO" \
+                    --comment "Completed in ${{ github.sha }}" 2>/dev/null || true
+                  echo "Closed issue #${current_issue_num}: ${current_title}"
+                fi
+              fi
+            else
+              # Open: create issue if not linked
+              if [[ -z "$current_issue_num" ]]; then
+                body="## ${current_title}"$'\n\n'
+                if [[ -n "$current_issue_body" ]]; then
+                  body+="${current_issue_body}"$'\n\n'
+                fi
+                body+="---"$'\n'
+                body+="Tracked in \`todo.md\`. Synced by GitHub Action."
+
+                labels=""
+                case "$current_tag" in
+                  new)      labels="--label enhancement" ;;
+                  improved) labels="--label enhancement" ;;
+                  fixed)    labels="--label bug" ;;
+                  balance)  labels="--label balance" ;;
+                esac
+
+                new_issue=$(gh issue create \
+                  --repo "$REPO" \
+                  --title "$current_title" \
+                  --body "$body" \
+                  --assignee "$CURRENT_USER" \
+                  $labels \
+                  2>/dev/null || echo "")
+
+                if [[ -n "$new_issue" ]]; then
+                  new_num=$(echo "$new_issue" | grep -oE '[0-9]+$')
+                  if [[ -n "$new_num" ]]; then
+                    escaped_title=$(printf '%s\n' "$current_title" | sed 's/[&/\]/\\&/g')
+                    sed -i "s|- \[ \] ${escaped_title}$|- [ ] ${current_title} (#${new_num})|" "$TODO_FILE"
+                    MODIFIED=true
+                    echo "Created issue #${new_num}: ${current_title}"
+                  fi
+                fi
+              fi
+            fi
+          }
+
+          while IFS= read -r line || [[ -n "$line" ]]; do
+            if [[ "$line" =~ ^[[:space:]]*-[[:space:]]\[([[:space:]x])\][[:space:]]+(.*) ]]; then
+              flush_item
+              current_checked="${BASH_REMATCH[1]}"
+              rest="${BASH_REMATCH[2]}"
+              current_issue_num=""
+              current_issue_body=""
+              current_changelog=""
+              current_tag="new"
+              current_meta_key=""
+              in_item=true
+
+              if [[ "$rest" =~ ^(.*)[[:space:]]+\(#([0-9]+)\)[[:space:]]*$ ]]; then
+                current_title="${BASH_REMATCH[1]}"
+                current_issue_num="${BASH_REMATCH[2]}"
+              else
+                current_title=$(echo "$rest" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+              fi
+
+            elif [[ "$in_item" == true ]] && [[ "$line" =~ ^[[:space:]]+- ]]; then
+              meta_content=$(echo "$line" | sed 's/^[[:space:]]*- //')
+              if [[ "$meta_content" =~ ^issue:[[:space:]]*(.*) ]]; then
+                current_meta_key="issue"
+                current_issue_body="${BASH_REMATCH[1]}"
+              elif [[ "$meta_content" =~ ^changelog:[[:space:]]*(.*) ]]; then
+                current_meta_key="changelog"
+                current_changelog="${BASH_REMATCH[1]}"
+              elif [[ "$meta_content" =~ ^tag:[[:space:]]*(.*) ]]; then
+                current_meta_key="tag"
+                current_tag=$(echo "${BASH_REMATCH[1]}" | sed 's/[[:space:]]*$//')
+              else
+                trimmed=$(echo "$meta_content" | sed 's/^[[:space:]]*//')
+                case "$current_meta_key" in
+                  issue)     current_issue_body+=" ${trimmed}" ;;
+                  changelog) current_changelog+=" ${trimmed}" ;;
+                esac
+              fi
+
+            elif [[ "$line" =~ ^[[:space:]]*$ ]] || [[ "$line" =~ ^## ]] || [[ "$line" =~ ^--- ]]; then
+              if [[ "$in_item" == true ]]; then
+                flush_item
+                in_item=false
+                current_title=""
+                current_meta_key=""
+              fi
+            fi
+          done < "$TODO_FILE"
+
+          flush_item
+
+          # Push updated todo.md back if issue numbers were added
+          if [[ "$MODIFIED" == true ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add "$TODO_FILE"
+            git commit -m "Link todo.md items to GitHub Issues [skip ci]"
+            git push
+            echo "Pushed updated todo.md with issue links."
+          fi
+
+          echo "Done."
