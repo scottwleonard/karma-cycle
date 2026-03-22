@@ -12,7 +12,7 @@ const handler: Handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server misconfigured' }) };
   }
 
-  let body: { suggestion?: string; t?: number; email?: string };
+  let body: { suggestion?: string; t?: number; email?: string; force?: boolean };
   try {
     body = JSON.parse(event.body || '{}');
   } catch {
@@ -37,6 +37,53 @@ const handler: Handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Thank you!' }) };
   }
 
+  // Extract keywords (3+ char words) for search query
+  const keywords = suggestion
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length >= 3)
+    .slice(0, 5);
+
+  // Search existing open issues for duplicates (skip if force flag set)
+  if (keywords.length > 0 && !body.force) {
+    const searchQuery = `repo:${REPO} is:issue state:open label:community-request ${keywords.join(' ')}`;
+    const searchRes = await fetch(
+      `https://api.github.com/search/issues?q=${encodeURIComponent(searchQuery)}&per_page=3`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+        },
+      },
+    );
+
+    if (searchRes.ok) {
+      const searchData = (await searchRes.json()) as {
+        total_count: number;
+        items: { number: number; title: string; html_url: string }[];
+      };
+
+      if (searchData.total_count > 0) {
+        const matches = searchData.items.map((i) => ({
+          number: i.number,
+          title: i.title.replace(/^Community:\s*/i, ''),
+          url: i.html_url,
+        }));
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            success: false,
+            duplicate: true,
+            matches,
+            message: 'Similar suggestions already exist! Check if one of these matches your idea.',
+          }),
+        };
+      }
+    }
+  }
+
+  // No duplicates found — create the issue
   const title = `Community: ${suggestion.slice(0, 80)}${suggestion.length > 80 ? '...' : ''}`;
   const issueBody = `## Player Suggestion\n\n${suggestion}\n\n---\n*Submitted from the in-game Suggest button.*`;
 

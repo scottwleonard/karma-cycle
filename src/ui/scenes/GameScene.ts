@@ -13,7 +13,6 @@ import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
-import { submitSuggestion } from '../submitSuggestion';
 import { clearLocal } from '../../saves/localStorage';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
@@ -419,9 +418,7 @@ export class GameScene extends Container {
     this.addChild(this.resetOverlay);
 
     // === SUGGEST OVERLAY ===
-    this.suggestOverlay = new SuggestOverlay(gw, (text) => {
-      submitSuggestion(text, this.loadTime);
-    });
+    this.suggestOverlay = new SuggestOverlay(gw, this.loadTime);
     this.addChild(this.suggestOverlay);
 
     // Header buttons (top-right)

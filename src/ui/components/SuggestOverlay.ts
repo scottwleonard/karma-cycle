@@ -1,6 +1,8 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { CONFIG } from '../../config';
 import { ActionButton } from './ActionButton';
+import { submitSuggestion } from '../submitSuggestion';
+import type { SuggestionMatch } from '../submitSuggestion';
 import type { LayoutInfo } from '../layout';
 
 const MAX_CHARS = 500;
@@ -11,14 +13,19 @@ export class SuggestOverlay extends Container {
   private statusText: Text;
   private submitButton: ActionButton;
   private cancelButton: ActionButton;
+  private submitAnywayButton: ActionButton;
+  private duplicateText: Text;
   private submitted = false;
-  private onSubmit: (text: string) => void;
+  private loadTime: number;
+  private gameWidth: number;
+  private pendingSuggestion = '';
 
-  constructor(gameWidth: number, onSubmit: (text: string) => void) {
+  constructor(gameWidth: number, loadTime: number) {
     super();
     this.visible = false;
     this.eventMode = 'static';
-    this.onSubmit = onSubmit;
+    this.loadTime = loadTime;
+    this.gameWidth = gameWidth;
 
     const gh = CONFIG.display.referenceHeight;
 
@@ -26,7 +33,7 @@ export class SuggestOverlay extends Container {
     const bg = new Graphics();
     bg.rect(0, 0, gameWidth, gh);
     bg.fill({ color: 0x000000, alpha: 0.9 });
-    bg.eventMode = 'static'; // block clicks through
+    bg.eventMode = 'static';
     this.addChild(bg);
 
     // Title
@@ -59,6 +66,17 @@ export class SuggestOverlay extends Container {
     this.charCount.y = 830;
     this.addChild(this.charCount);
 
+    // Duplicate matches text (hidden initially)
+    this.duplicateText = new Text({
+      text: '',
+      style: { fontFamily: 'monospace', fontSize: 22, fill: 0xffaa44, align: 'center', wordWrap: true, wordWrapWidth: 800, lineHeight: 32 },
+    });
+    this.duplicateText.anchor.set(0.5, 0);
+    this.duplicateText.x = gameWidth / 2;
+    this.duplicateText.y = 870;
+    this.duplicateText.visible = false;
+    this.addChild(this.duplicateText);
+
     // Status text (for thank you / errors)
     this.statusText = new Text({
       text: '',
@@ -84,6 +102,15 @@ export class SuggestOverlay extends Container {
     this.cancelButton.x = gameWidth / 2 + 40;
     this.cancelButton.y = 880;
     this.addChild(this.cancelButton);
+
+    // Submit Anyway button (hidden initially, shown on duplicate)
+    this.submitAnywayButton = new ActionButton('Submit Anyway', 300, 70, 0x886622, () => {
+      this.forceSubmit();
+    });
+    this.submitAnywayButton.x = gameWidth / 2 - 320;
+    this.submitAnywayButton.y = 880;
+    this.submitAnywayButton.visible = false;
+    this.addChild(this.submitAnywayButton);
   }
 
   show(layout: LayoutInfo): void {
@@ -96,6 +123,9 @@ export class SuggestOverlay extends Container {
       return;
     }
     this.statusText.text = '';
+    this.duplicateText.visible = false;
+    this.submitAnywayButton.visible = false;
+    this.submitButton.visible = true;
     this.visible = true;
     this.submitButton.setEnabled(true);
     this.createTextarea(layout);
@@ -127,8 +157,6 @@ export class SuggestOverlay extends Container {
       box-sizing: border-box;
     `;
 
-    // Position the textarea over the canvas area where the overlay shows
-    // Reference coords: centered, y=340 to y=820, width=800
     const refX = (CONFIG.display.referenceWidth - 800) / 2;
     const refY = 340;
     const refW = 800;
@@ -166,15 +194,78 @@ export class SuggestOverlay extends Container {
     }
 
     this.submitButton.setEnabled(false);
-    this.statusText.text = 'Submitting...';
+    this.statusText.text = 'Checking for similar suggestions...';
     this.statusText.style.fill = 0xcccccc;
 
-    this.onSubmit(text);
-    this.submitted = true;
-    this.statusText.text = 'Thank you! Your suggestion has been submitted.';
-    this.statusText.style.fill = 0x88ff88;
+    const result = await submitSuggestion(text, this.loadTime);
 
-    setTimeout(() => this.hide(), 2000);
+    if (result.duplicate && result.matches && result.matches.length > 0) {
+      this.showDuplicates(result.matches, text);
+      return;
+    }
+
+    if (result.success) {
+      this.submitted = true;
+      this.statusText.text = result.message;
+      this.statusText.style.fill = 0x88ff88;
+      setTimeout(() => this.hide(), 2000);
+    } else {
+      this.statusText.text = result.message;
+      this.statusText.style.fill = 0xff6644;
+      this.submitButton.setEnabled(true);
+    }
+  }
+
+  private showDuplicates(matches: SuggestionMatch[], text: string): void {
+    this.pendingSuggestion = text;
+
+    const lines = ['Similar suggestions already exist:\n'];
+    for (const m of matches) {
+      lines.push(`  #${m.number}: ${m.title}`);
+    }
+    lines.push('\nIf yours is different, submit anyway.');
+
+    this.duplicateText.text = lines.join('\n');
+    this.duplicateText.visible = true;
+    this.statusText.text = '';
+
+    // Hide normal submit, show "Submit Anyway"
+    this.submitButton.visible = false;
+    this.submitAnywayButton.visible = true;
+    this.submitAnywayButton.setEnabled(true);
+
+    // Move cancel and submit anyway below the duplicate text
+    const belowDuplicates = 870 + this.duplicateText.height + 20;
+    this.submitAnywayButton.y = belowDuplicates;
+    this.cancelButton.y = belowDuplicates;
+    this.cancelButton.x = this.gameWidth / 2 + 40;
+  }
+
+  private async forceSubmit(): Promise<void> {
+    if (this.submitted || !this.pendingSuggestion) return;
+
+    this.submitAnywayButton.setEnabled(false);
+    this.statusText.text = 'Submitting...';
+    this.statusText.style.fill = 0xcccccc;
+    this.statusText.y = this.submitAnywayButton.y + 90;
+
+    // Post directly — skip duplicate check by adding a force flag
+    try {
+      const res = await fetch('/.netlify/functions/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suggestion: this.pendingSuggestion, t: this.loadTime, force: true }),
+      });
+      const result = (await res.json()) as { success: boolean; message: string };
+      this.submitted = true;
+      this.statusText.text = result.success ? result.message : result.message;
+      this.statusText.style.fill = result.success ? 0x88ff88 : 0xff6644;
+      setTimeout(() => this.hide(), 2000);
+    } catch {
+      this.statusText.text = 'Network error — try again later.';
+      this.statusText.style.fill = 0xff6644;
+      this.submitAnywayButton.setEnabled(true);
+    }
   }
 
   override destroy(): void {
