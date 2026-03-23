@@ -43,6 +43,10 @@ Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude
 
 Available skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/retro`, `/investigate`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`.
 
+## Issue Hygiene
+
+When code is written directly (not started from an issue), check all open GitHub issues after committing. Close any issues that are resolved by the changes, commenting with a link to the commit and PR (if applicable).
+
 ## Permissions
 
 Allow code input and edits from iPad (Claude Code on the web).
