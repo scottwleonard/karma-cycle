@@ -207,16 +207,16 @@ const handler: Handler = async (event) => {
     }
 
     try {
-      // Insert vote (unique constraint on instance+pr_number+player_name prevents duplicates)
-      const { error: insertError } = await supabase
+      // Upsert vote — allows changing direction if player already voted on this PR
+      const { error: upsertError } = await supabase
         .from('votes')
-        .insert({ instance, pr_number: prNumber, player_name: playerName, direction });
+        .upsert(
+          { instance, pr_number: prNumber, player_name: playerName, direction },
+          { onConflict: 'instance,pr_number,player_name' },
+        );
 
-      if (insertError) {
-        if (insertError.code === '23505') {
-          return { statusCode: 200, headers, body: JSON.stringify({ success: false, message: 'Already voted' }) };
-        }
-        throw insertError;
+      if (upsertError) {
+        throw upsertError;
       }
 
       // Get current vote state
