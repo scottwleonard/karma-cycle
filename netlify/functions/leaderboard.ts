@@ -27,15 +27,29 @@ const handler: Handler = async (event) => {
   if (event.httpMethod === 'GET') {
     try {
       const supabase = getSupabase();
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('name, karma, lives, tier, updated_at')
-        .eq('instance', instance)
-        .order('karma', { ascending: false })
-        .limit(MAX_ENTRIES);
+      const [activeRes, allTimeRes] = await Promise.all([
+        supabase
+          .from('leaderboard')
+          .select('name, karma, lives, tier, updated_at')
+          .eq('instance', instance)
+          .order('karma', { ascending: false })
+          .limit(MAX_ENTRIES),
+        supabase
+          .from('leaderboard')
+          .select('name, peak_karma, tier')
+          .eq('instance', instance)
+          .order('peak_karma', { ascending: false })
+          .limit(3),
+      ]);
 
-      if (error) throw error;
-      return { statusCode: 200, headers, body: JSON.stringify(data ?? []) };
+      if (activeRes.error) throw activeRes.error;
+      return {
+        statusCode: 200, headers,
+        body: JSON.stringify({
+          active: activeRes.data ?? [],
+          allTime: (allTimeRes.data ?? []).map((r) => ({ name: r.name, karma: r.peak_karma, tier: r.tier })),
+        }),
+      };
     } catch (e) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: String(e) }) };
     }
@@ -65,10 +79,21 @@ const handler: Handler = async (event) => {
 
     try {
       const supabase = getSupabase();
+
+      // Fetch existing peak to preserve it
+      const { data: existing } = await supabase
+        .from('leaderboard')
+        .select('peak_karma')
+        .eq('instance', instance)
+        .eq('name', name)
+        .single();
+
+      const peakKarma = Math.max(karma, existing?.peak_karma ?? 0);
+
       const { error } = await supabase
         .from('leaderboard')
         .upsert(
-          { instance, name, karma, lives, tier, updated_at: new Date().toISOString() },
+          { instance, name, karma, lives, tier, peak_karma: peakKarma, updated_at: new Date().toISOString() },
           { onConflict: 'instance,name' },
         );
 

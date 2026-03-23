@@ -84,14 +84,14 @@ export class LeaderboardPanel {
     try {
       const res = await fetch('/.netlify/functions/leaderboard');
       if (!res.ok) return;
-      const entries = (await res.json()) as LeaderboardEntry[];
-      this.render(entries);
+      const data = (await res.json()) as { active: LeaderboardEntry[]; allTime: LeaderboardEntry[] };
+      this.render(data.active, data.allTime);
     } catch {
       // Silent fail
     }
   }
 
-  private render(entries: LeaderboardEntry[]): void {
+  private render(entries: LeaderboardEntry[], allTime: LeaderboardEntry[]): void {
     this.list.innerHTML = '';
 
     if (entries.length === 0) {
@@ -147,12 +147,11 @@ export class LeaderboardPanel {
       this.list.appendChild(row);
     });
 
-    this.renderAllTimeHighScores(entries);
+    this.renderAllTimeHighScores(allTime);
   }
 
-  private renderAllTimeHighScores(entries: LeaderboardEntry[]): void {
-    const top3 = entries.slice(0, 3);
-    if (top3.length === 0) return;
+  private renderAllTimeHighScores(allTime: LeaderboardEntry[]): void {
+    if (allTime.length === 0) return;
 
     const divider = document.createElement('div');
     divider.style.cssText = `
@@ -172,7 +171,7 @@ export class LeaderboardPanel {
 
     const MEDALS = ['🥇', '🥈', '🥉'];
 
-    top3.forEach((entry, i) => {
+    allTime.forEach((entry, i) => {
       const row = document.createElement('div');
       const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
       row.style.cssText = `
