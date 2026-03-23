@@ -13,6 +13,7 @@ import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
 import { SuggestionTracker } from '../SuggestionTracker';
@@ -147,6 +148,9 @@ export class GameScene extends Container {
   // Activity log sidebar
   private activityLog!: ActivityLog;
 
+  // Tutorial overlay
+  private tutorialOverlay!: TutorialOverlay;
+
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
     this.engine = engine;
@@ -172,6 +176,9 @@ export class GameScene extends Container {
     if (engine.state.nirvanaAchieved && engine.state.victoryStats) {
       this.showVictoryScreen(engine.state.victoryStats);
     }
+
+    // Show tutorial on first load
+    this.tutorialOverlay.showIfNeeded();
   }
 
   private buildUI(): void {
@@ -444,6 +451,10 @@ export class GameScene extends Container {
       this.suggestionTracker.trackIssue(issueNumber);
     });
     this.addChild(this.suggestOverlay);
+
+    // === TUTORIAL OVERLAY ===
+    this.tutorialOverlay = new TutorialOverlay();
+    this.addChild(this.tutorialOverlay);
 
     // Header buttons (top-right)
     const suggestBtn = new ActionButton('Suggest', 170, 50, 0x886622, () => {
