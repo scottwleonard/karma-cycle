@@ -121,6 +121,30 @@ export const LIFE_UPGRADES: LifeUpgradeDefinition[] = [
     category: 'spiritual',
     karmaMultiplier: 1.3,
   },
+  {
+    id: 'alms_giving',
+    name: 'Alms Giving',
+    description: 'Give to beggars · Karma rate +40%',
+    cost: 45,
+    category: 'spiritual',
+    karmaMultiplier: 1.4,
+  },
+  {
+    id: 'community_kitchen',
+    name: 'Community Kitchen',
+    description: 'Feed the hungry · Karma rate +65%',
+    cost: 100,
+    category: 'spiritual',
+    karmaMultiplier: 1.65,
+  },
+  {
+    id: 'great_benefactor',
+    name: 'Great Benefactor',
+    description: 'Fund community projects · Karma rate +100%',
+    cost: 250,
+    category: 'spiritual',
+    karmaMultiplier: 2.0,
+  },
 
   // === MATERIAL — boost wealth, but slow or drain karma ===
   {
