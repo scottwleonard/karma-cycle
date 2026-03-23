@@ -1,8 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { lerpColor } from '../../utils/math';
 
-const COLOR_GREEN = 0x4caf50;
-const COLOR_YELLOW = 0xffeb3b;
 const COLOR_RED = 0xf44336;
 
 export class NeedBar extends Container {
@@ -12,11 +10,13 @@ export class NeedBar extends Container {
   private valueLabel: Text;
   private barWidth: number;
   private barHeight: number;
+  private statColor: number | undefined;
 
-  constructor(name: string, width: number, height = 32) {
+  constructor(name: string, width: number, height = 32, statColor?: number) {
     super();
     this.barWidth = width;
     this.barHeight = height;
+    this.statColor = statColor;
 
     this.nameLabel = new Text({
       text: name,
@@ -64,13 +64,15 @@ export class NeedBar extends Container {
     const actualBarWidth = this.barWidth - barX - 60;
     const fillWidth = actualBarWidth * pct;
 
-    // Color interpolation
+    // Color: use stat color (fades to red when critical) or fallback to red
     let color: number;
-    if (pct > 0.6) {
-      color = COLOR_GREEN;
-    } else if (pct > 0.2) {
-      const t = (pct - 0.2) / 0.4;
-      color = lerpColor(COLOR_RED, COLOR_YELLOW, t);
+    if (this.statColor !== undefined) {
+      if (pct > 0.2) {
+        color = this.statColor;
+      } else {
+        const t = pct / 0.2;
+        color = lerpColor(COLOR_RED, this.statColor, t);
+      }
     } else {
       color = COLOR_RED;
     }

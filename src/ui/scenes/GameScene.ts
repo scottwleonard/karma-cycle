@@ -476,18 +476,18 @@ export class GameScene extends Container {
     this.gameView = new Container();
     const barWidth = gw - 80;
 
-    // Need bars
-    this.hungerBar = new NeedBar('Hunger', barWidth);
+    // Need bars — use stat-specific colors for visual consistency
+    this.hungerBar = new NeedBar('Hunger', barWidth, 32, CONFIG.display.hungerColor);
     this.hungerBar.x = 40;
     this.hungerBar.y = 10;
     this.gameView.addChild(this.hungerBar);
 
-    this.shelterBar = new NeedBar('Shelter', barWidth);
+    this.shelterBar = new NeedBar('Shelter', barWidth, 32, CONFIG.display.shelterColor);
     this.shelterBar.x = 40;
     this.shelterBar.y = 60;
     this.gameView.addChild(this.shelterBar);
 
-    this.healthBar = new NeedBar('Health', barWidth);
+    this.healthBar = new NeedBar('Health', barWidth, 32, CONFIG.display.healthColor);
     this.healthBar.x = 40;
     this.healthBar.y = 110;
     this.gameView.addChild(this.healthBar);
@@ -496,7 +496,7 @@ export class GameScene extends Container {
     const btnY = 175;
     const btnW = (gw - 100) / 3;
 
-    this.feedButton = new ActionButton('Feed', btnW, 80, 0xb8860b, () => {
+    this.feedButton = new ActionButton('Feed', btnW, 80, CONFIG.display.hungerColor, () => {
       const cost = getFeedCost(this.engine.state);
       if (this.engine.state.wealth >= cost) {
         this.engine.state.wealth -= cost;
@@ -512,7 +512,7 @@ export class GameScene extends Container {
     this.feedButton.y = btnY;
     this.gameView.addChild(this.feedButton);
 
-    this.repairButton = new ActionButton('Repair', btnW, 80, 0x228b6b, () => {
+    this.repairButton = new ActionButton('Repair', btnW, 80, CONFIG.display.shelterColor, () => {
       const cost = getRepairCost(this.engine.state);
       if (this.engine.state.wealth >= cost) {
         this.engine.state.wealth -= cost;
@@ -543,7 +543,7 @@ export class GameScene extends Container {
 
     // Auto toggles (hidden until soul upgrade purchased)
     const toggleY = btnY + 86;
-    this.autoFeedToggle = this.buildToggle('Auto Feed', 0xb8860b, () => {
+    this.autoFeedToggle = this.buildToggle('Auto Feed', CONFIG.display.hungerColor, () => {
       this.engine.state.autoFeedEnabled = !this.engine.state.autoFeedEnabled;
     });
     this.autoFeedToggle.x = 30;
@@ -551,7 +551,7 @@ export class GameScene extends Container {
     this.autoFeedToggle.visible = false;
     this.gameView.addChild(this.autoFeedToggle);
 
-    this.autoRepairToggle = this.buildToggle('Auto Repair', 0x228b6b, () => {
+    this.autoRepairToggle = this.buildToggle('Auto Repair', CONFIG.display.shelterColor, () => {
       this.engine.state.autoRepairEnabled = !this.engine.state.autoRepairEnabled;
     });
     this.autoRepairToggle.x = 280;
@@ -1175,7 +1175,7 @@ export class GameScene extends Container {
     // Life events log
     const lifeEvent = this.engine.lastLifeEvent;
     if (lifeEvent) {
-      this.eventLog.addEntry(lifeEvent.text, lifeEvent.severity);
+      this.eventLog.addEntry(lifeEvent.text, lifeEvent.severity, lifeEvent.color);
       this.activityLog.addLifeEvent(lifeEvent.text, lifeEvent.severity);
       this.engine.lastLifeEvent = null;
     }

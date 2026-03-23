@@ -63,15 +63,15 @@ export class EventLog extends Container {
     this.logContainer.mask = this.clipMask;
   }
 
-  addEntry(message: string, severity: EventSeverity): void {
-    const color = SEVERITY_COLORS[severity];
+  addEntry(message: string, severity: EventSeverity, color?: number): void {
+    const resolvedColor = color ?? SEVERITY_COLORS[severity];
 
     const text = new Text({
       text: message,
       style: {
         fontFamily: 'monospace',
         fontSize: 26,
-        fill: color,
+        fill: resolvedColor,
         wordWrap: true,
         wordWrapWidth: this.logWidth - 20,
       },
