@@ -129,7 +129,7 @@ export const CONFIG = {
     referenceHeight: 1920,
     bgColor: 0x0a0a2e,
     karmaColor: 0xffd700,
-    wealthColor: 0xc0c0c0,
+    wealthColor: 0x00cc66,
     hungerColor: 0xff8c00,
     shelterColor: 0x20b2aa,
     healthColor: 0xdc143c,
