@@ -35,6 +35,8 @@ export function createDefaultState(): GameState {
     nirvanaAchieved: false,
     victoryStats: null,
 
+    lastCelebratedKarmaMilestone: 0,
+
     totalPlayTime: 0,
     lastSaveTimestamp: Date.now(),
     version: 1,
