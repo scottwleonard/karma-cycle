@@ -146,6 +146,73 @@ export class LeaderboardPanel {
       row.appendChild(info);
       this.list.appendChild(row);
     });
+
+    this.renderAllTimeHighScores(entries);
+  }
+
+  private renderAllTimeHighScores(entries: LeaderboardEntry[]): void {
+    const top3 = entries.slice(0, 3);
+    if (top3.length === 0) return;
+
+    const divider = document.createElement('div');
+    divider.style.cssText = `
+      margin: 16px 4px 0;
+      border-top: 1px solid rgba(255, 215, 0, 0.3);
+    `;
+    this.list.appendChild(divider);
+
+    const sectionTitle = document.createElement('div');
+    sectionTitle.textContent = '★ All Time High Scores';
+    sectionTitle.style.cssText = `
+      color: #ffd700; font-size: 13px; font-weight: bold;
+      text-align: center; padding: 10px 8px 6px;
+      letter-spacing: 0.5px;
+    `;
+    this.list.appendChild(sectionTitle);
+
+    const MEDALS = ['🥇', '🥈', '🥉'];
+
+    top3.forEach((entry, i) => {
+      const row = document.createElement('div');
+      const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
+      row.style.cssText = `
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        ${isPlayer ? 'background: rgba(255, 215, 0, 0.1); border-radius: 4px;' : ''}
+      `;
+
+      const medal = document.createElement('span');
+      medal.textContent = MEDALS[i];
+      medal.style.cssText = `font-size: 16px; min-width: 24px; text-align: center;`;
+
+      const tierIcon = document.createElement('span');
+      tierIcon.textContent = TIER_NAMES[entry.tier] || '';
+      tierIcon.style.cssText = `font-size: 14px; min-width: 18px;`;
+
+      const info = document.createElement('div');
+      info.style.cssText = `flex: 1; min-width: 0;`;
+
+      const name = document.createElement('div');
+      name.textContent = entry.name;
+      name.style.cssText = `
+        font-size: 13px; font-weight: ${isPlayer ? 'bold' : 'normal'};
+        color: ${isPlayer ? '#ffd700' : '#ccc'};
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      `;
+
+      const karmaEl = document.createElement('div');
+      karmaEl.textContent = `${formatKarma(entry.karma)} karma`;
+      karmaEl.style.cssText = `font-size: 11px; color: #aaa;`;
+
+      info.appendChild(name);
+      info.appendChild(karmaEl);
+
+      row.appendChild(medal);
+      row.appendChild(tierIcon);
+      row.appendChild(info);
+      this.list.appendChild(row);
+    });
   }
 
   destroy(): void {
