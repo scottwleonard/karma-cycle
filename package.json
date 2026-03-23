@@ -18,6 +18,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.3",
     "pixi.js": "^8.16.0"
   }
 }
