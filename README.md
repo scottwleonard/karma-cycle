@@ -134,7 +134,21 @@ If you prefer working in an IDE manually, that's fine too — just follow standa
 4. `npm run build` to verify TypeScript compiles clean
 5. Open a PR
 
-No linter or test suite is configured yet. The TypeScript compiler (`tsc --strict`) is the primary quality gate.
+Tests use [Vitest](https://vitest.dev/) — run with `npm test`.
+
+### gstack Setup
+
+This project uses [gstack](https://github.com/garrytan/gstack) skills for Claude Code. To install:
+
+```bash
+git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack
+./setup
+```
+
+Requires [bun](https://bun.sh/) (`curl -fsSL https://bun.sh/install | bash`).
+
+See the gstack section in `CLAUDE.md` for available skills and conventions.
 
 ---
 
