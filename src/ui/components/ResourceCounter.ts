@@ -14,7 +14,7 @@ export class ResourceCounter extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: fontSize * 0.6,
-        fill: 0xdddddd,
+        fill: 0xffffff,
         fontWeight: 'bold',
       },
     });
@@ -37,7 +37,7 @@ export class ResourceCounter extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: fontSize * 0.4,
-        fill: 0x888888,
+        fill: 0xaaaaaa,
       },
     });
     this.rateText.y = fontSize * 0.6 + fontSize + 8;
@@ -49,10 +49,10 @@ export class ResourceCounter extends Container {
     if (rate !== undefined) {
       if (rate < 0) {
         this.rateText.text = '-' + formatRate(Math.abs(rate));
-        this.rateText.style.fill = 0xdc143c;
+        this.rateText.style.fill = 0xff4466;
       } else {
         this.rateText.text = formatRate(rate);
-        this.rateText.style.fill = 0xaabb88;
+        this.rateText.style.fill = 0xbbdd99;
       }
     }
   }

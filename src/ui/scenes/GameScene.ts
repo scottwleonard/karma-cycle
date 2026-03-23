@@ -195,7 +195,7 @@ export class GameScene extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 36,
-        fill: 0xeeeedd,
+        fill: 0xffffff,
       },
     });
     this.headerText.x = 40;
@@ -251,7 +251,7 @@ export class GameScene extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 22,
-        fill: 0xccaa33,
+        fill: 0xddbb44,
       },
     });
     this.lifetimeKarmaText.x = 60;
@@ -263,7 +263,7 @@ export class GameScene extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 20,
-        fill: 0xffcc44,
+        fill: 0xffdd55,
       },
     });
     this.bankedKarmaText.x = 60;
@@ -286,7 +286,7 @@ export class GameScene extends Container {
     const tabWidth = (gw - 60) / 2;
     const tabNames: TabName[] = ['game', 'soul'];
     const tabLabels = ['Game', 'Soul'];
-    const tabColors = [0x3a3a6e, 0x6e3a3a];
+    const tabColors = [0x404488, 0x884444];
 
     for (let i = 0; i < 2; i++) {
       const tab = tabNames[i];
@@ -334,7 +334,7 @@ export class GameScene extends Container {
     this.deathSubtext.y = 700;
     this.deathOverlay.addChild(this.deathSubtext);
 
-    this.continueButton = new ActionButton('Begin New Life', 400, 80, 0x885522, () => {
+    this.continueButton = new ActionButton('Begin New Life', 400, 80, 0x996633, () => {
       performDeathRebirth(this.engine.state, this.engine.events);
       this.deathOverlay.visible = false;
       resetLifeEvents();
@@ -457,14 +457,14 @@ export class GameScene extends Container {
     this.addChild(this.tutorialOverlay);
 
     // Header buttons (top-right)
-    const suggestBtn = new ActionButton('Suggest', 170, 50, 0x886622, () => {
+    const suggestBtn = new ActionButton('Suggest', 170, 50, 0x998833, () => {
       this.suggestOverlay.show(this.layout);
     });
     suggestBtn.x = gw - 190;
     suggestBtn.y = 25;
     this.addChild(suggestBtn);
 
-    const resetBtn = new ActionButton('Reset', 140, 50, 0x882222, () => {
+    const resetBtn = new ActionButton('Reset', 140, 50, 0xaa3333, () => {
       this.resetOverlay.visible = true;
     });
     resetBtn.x = gw - 350;
@@ -567,7 +567,7 @@ export class GameScene extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 22,
-        fill: 0xaabb99,
+        fill: 0xbbccaa,
         fontWeight: 'bold',
       },
     });
@@ -598,9 +598,9 @@ export class GameScene extends Container {
       container.addChild(bg);
 
       const categoryTints: Record<string, number> = {
-        survival: 0x55aa55,
-        spiritual: 0x6688ff,
-        material: 0xff8844,
+        survival: 0x66cc66,
+        spiritual: 0x7799ff,
+        material: 0xff9955,
       };
       const tint = categoryTints[def.category] || 0xaaaaaa;
 
@@ -742,20 +742,20 @@ export class GameScene extends Container {
       row.bg.clear();
       if (affordable) {
         row.bg.roundRect(0, 0, rowW, rowH, 8);
-        row.bg.fill({ color: 0x1e2e1e });
+        row.bg.fill({ color: 0x1a2e20 });
         row.bg.roundRect(0, 0, rowW, rowH, 8);
-        row.bg.stroke({ color: 0x55aa55, alpha: 0.5, width: 1 });
+        row.bg.stroke({ color: 0x66cc77, alpha: 0.6, width: 1 });
         row.container.alpha = 1;
         row.container.cursor = 'pointer';
-        row.costText.style.fill = 0xddddcc;
+        row.costText.style.fill = 0xeeeedd;
       } else {
         row.bg.roundRect(0, 0, rowW, rowH, 8);
-        row.bg.fill({ color: 0x181822 });
+        row.bg.fill({ color: 0x161830 });
         row.bg.roundRect(0, 0, rowW, rowH, 8);
-        row.bg.stroke({ color: 0x444455, alpha: 0.25, width: 1 });
-        row.container.alpha = 0.5;
+        row.bg.stroke({ color: 0x555577, alpha: 0.3, width: 1 });
+        row.container.alpha = 0.55;
         row.container.cursor = 'default';
-        row.costText.style.fill = 0x777777;
+        row.costText.style.fill = 0x888899;
       }
 
       row.container.y = y;
@@ -860,7 +860,7 @@ export class GameScene extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 28,
-        fill: 0xffbbbb,
+        fill: 0xffccee,
         fontWeight: 'bold',
       },
     });
@@ -869,7 +869,7 @@ export class GameScene extends Container {
     this.soulView.addChild(title);
 
     SOUL_UPGRADES.forEach((def, i) => {
-      const btn = new ActionButton(def.name, gw - 80, 70, 0x5a2a2a, () => {
+      const btn = new ActionButton(def.name, gw - 80, 70, 0x5a2a55, () => {
         if (buySoulUpgrade(this.engine.state, def)) {
           this.engine.events.emit({
             type: 'soul_upgrade_purchased',

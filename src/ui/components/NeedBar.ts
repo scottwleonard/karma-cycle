@@ -23,7 +23,7 @@ export class NeedBar extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: height * 0.7,
-        fill: 0xeeeeee,
+        fill: 0xffffff,
         fontWeight: 'bold',
       },
     });
@@ -34,9 +34,9 @@ export class NeedBar extends Container {
 
     this.bg = new Graphics();
     this.bg.roundRect(barX, 2, actualBarWidth, height - 4, 4);
-    this.bg.fill({ color: 0x1a1a2e });
+    this.bg.fill({ color: 0x181838 });
     this.bg.roundRect(barX, 2, actualBarWidth, height - 4, 4);
-    this.bg.stroke({ color: 0x555577, alpha: 0.4, width: 1 });
+    this.bg.stroke({ color: 0x6666aa, alpha: 0.6, width: 1 });
     this.addChild(this.bg);
 
     this.fill = new Graphics();

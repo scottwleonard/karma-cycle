@@ -41,8 +41,8 @@ export class ActivityLog {
       position: fixed;
       top: 0;
       bottom: 0;
-      background: rgba(10, 10, 46, 0.92);
-      border-left: 1px solid rgba(255, 215, 0, 0.2);
+      background: rgba(14, 14, 56, 0.95);
+      border-left: 1px solid rgba(255, 215, 0, 0.3);
       display: none;
       flex-direction: column;
       font-family: monospace;
@@ -54,7 +54,7 @@ export class ActivityLog {
     const tabBar = document.createElement('div');
     tabBar.style.cssText = `
       display: flex;
-      border-bottom: 1px solid rgba(255, 215, 0, 0.12);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
       flex-shrink: 0;
     `;
 
@@ -128,8 +128,8 @@ export class ActivityLog {
       text-transform: uppercase;
       letter-spacing: 1px;
       cursor: pointer;
-      color: ${active ? 'rgba(255, 215, 0, 0.85)' : 'rgba(255, 215, 0, 0.35)'};
-      border-bottom: 2px solid ${active ? 'rgba(255, 215, 0, 0.65)' : 'transparent'};
+      color: ${active ? 'rgba(255, 215, 0, 0.95)' : 'rgba(255, 215, 0, 0.45)'};
+      border-bottom: 2px solid ${active ? 'rgba(255, 215, 0, 0.8)' : 'transparent'};
       transition: color 0.15s;
     `;
     tab.textContent = label;
@@ -192,7 +192,7 @@ export class ActivityLog {
     `;
 
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'color: #cccccc; word-break: break-word; margin-bottom: 4px;';
+    titleEl.style.cssText = 'color: #dddddd; word-break: break-word; margin-bottom: 4px;';
     titleEl.textContent = `#${issue.number} ${issue.title}`;
     entry.appendChild(titleEl);
 

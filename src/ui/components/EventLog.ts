@@ -7,9 +7,9 @@ interface LogEntry {
 }
 
 const SEVERITY_COLORS: Record<EventSeverity, number> = {
-  positive: 0x88cc88,
-  neutral: 0x999999,
-  negative: 0xcc6666,
+  positive: 0x99dd99,
+  neutral: 0xaaaaaa,
+  negative: 0xdd7777,
 };
 
 const MAX_VISIBLE = 6;
@@ -31,9 +31,9 @@ export class EventLog extends Container {
     // Background panel
     this.bg = new Graphics();
     this.bg.roundRect(0, 0, width, height, 8);
-    this.bg.fill({ color: 0x0d0d28, alpha: 0.7 });
+    this.bg.fill({ color: 0x111138, alpha: 0.75 });
     this.bg.roundRect(0, 0, width, height, 8);
-    this.bg.stroke({ color: 0x333366, alpha: 0.4, width: 1 });
+    this.bg.stroke({ color: 0x5555aa, alpha: 0.5, width: 1 });
     this.addChild(this.bg);
 
     // Title
@@ -42,7 +42,7 @@ export class EventLog extends Container {
       style: {
         fontFamily: 'monospace',
         fontSize: 24,
-        fill: 0x666688,
+        fill: 0x8888bb,
       },
     });
     title.x = 10;
@@ -70,7 +70,7 @@ export class EventLog extends Container {
       text: message,
       style: {
         fontFamily: 'monospace',
-        fontSize: 26,
+        fontSize: 24,
         fill: resolvedColor,
         wordWrap: true,
         wordWrapWidth: this.logWidth - 20,
