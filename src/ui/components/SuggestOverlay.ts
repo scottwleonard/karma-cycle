@@ -19,13 +19,15 @@ export class SuggestOverlay extends Container {
   private loadTime: number;
   private gameWidth: number;
   private pendingSuggestion = '';
+  private onSubmitted?: (issueNumber: number) => void;
 
-  constructor(gameWidth: number, loadTime: number) {
+  constructor(gameWidth: number, loadTime: number, onSubmitted?: (issueNumber: number) => void) {
     super();
     this.visible = false;
     this.eventMode = 'static';
     this.loadTime = loadTime;
     this.gameWidth = gameWidth;
+    this.onSubmitted = onSubmitted;
 
     const gh = CONFIG.display.referenceHeight;
 
@@ -208,6 +210,9 @@ export class SuggestOverlay extends Container {
       this.submitted = true;
       this.statusText.text = result.message;
       this.statusText.style.fill = 0x88ff88;
+      if (result.issueNumber && this.onSubmitted) {
+        this.onSubmitted(result.issueNumber);
+      }
       setTimeout(() => this.hide(), 2000);
     } else {
       this.statusText.text = result.message;
@@ -256,10 +261,13 @@ export class SuggestOverlay extends Container {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suggestion: this.pendingSuggestion, t: this.loadTime, force: true }),
       });
-      const result = (await res.json()) as { success: boolean; message: string };
+      const result = (await res.json()) as { success: boolean; message: string; issueNumber?: number };
       this.submitted = true;
       this.statusText.text = result.success ? result.message : result.message;
       this.statusText.style.fill = result.success ? 0x88ff88 : 0xff6644;
+      if (result.success && result.issueNumber && this.onSubmitted) {
+        this.onSubmitted(result.issueNumber);
+      }
       setTimeout(() => this.hide(), 2000);
     } catch {
       this.statusText.text = 'Network error — try again later.';

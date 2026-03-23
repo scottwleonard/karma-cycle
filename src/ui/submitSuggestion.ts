@@ -7,6 +7,7 @@ export interface SuggestionMatch {
 export interface SuggestionResult {
   success: boolean;
   message: string;
+  issueNumber?: number;
   duplicate?: boolean;
   matches?: SuggestionMatch[];
 }

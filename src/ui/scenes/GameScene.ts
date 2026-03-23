@@ -13,6 +13,8 @@ import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
+import { ToastManager } from '../components/Toast';
+import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
@@ -129,6 +131,8 @@ export class GameScene extends Container {
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
   private loadTime = Date.now();
+  private toastManager!: ToastManager;
+  private suggestionTracker!: SuggestionTracker;
 
   // Reset confirmation
   private resetOverlay!: Container;
@@ -418,8 +422,14 @@ export class GameScene extends Container {
 
     this.addChild(this.resetOverlay);
 
+    // === TOAST & SUGGESTION TRACKING ===
+    this.toastManager = new ToastManager();
+    this.suggestionTracker = new SuggestionTracker(this.toastManager);
+
     // === SUGGEST OVERLAY ===
-    this.suggestOverlay = new SuggestOverlay(gw, this.loadTime);
+    this.suggestOverlay = new SuggestOverlay(gw, this.loadTime, (issueNumber) => {
+      this.suggestionTracker.trackIssue(issueNumber);
+    });
     this.addChild(this.suggestOverlay);
 
     // Header buttons (top-right)
