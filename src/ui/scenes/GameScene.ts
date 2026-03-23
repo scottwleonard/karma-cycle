@@ -1191,6 +1191,9 @@ export class GameScene extends Container {
     this.particles.setSpawnRate(visualKarmaRate);
     this.particles.animate(dt);
 
+    // Karma milestone burst celebrations
+    this.checkKarmaMilestones(state);
+
     // Number pops — spawn more frequently, pop threshold based on rate
     const popThreshold = Math.max(0.3, 1 / (1 + Math.abs(netKarmaRate) * 0.2));
     if (netKarmaRate > 0) {
@@ -1214,5 +1217,19 @@ export class GameScene extends Container {
       }
     }
     this.numberPops.animate(dt);
+  }
+
+  private readonly KARMA_MILESTONES = [1_000, 5_000, 10_000, 50_000, 100_000, 200_000];
+
+  private checkKarmaMilestones(state: import('../../state/GameState').GameState): void {
+    const totalKarma = state.karma;
+    for (let i = this.KARMA_MILESTONES.length - 1; i >= 0; i--) {
+      const milestone = this.KARMA_MILESTONES[i];
+      if (totalKarma >= milestone && state.lastCelebratedKarmaMilestone < milestone) {
+        state.lastCelebratedKarmaMilestone = milestone;
+        this.particles.burst(60, 0xffd700);
+        break;
+      }
+    }
   }
 }

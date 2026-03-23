@@ -53,6 +53,9 @@ export interface GameState {
   nirvanaAchieved: boolean;
   victoryStats: VictoryStats | null;
 
+  // Karma milestone celebration tracking
+  lastCelebratedKarmaMilestone: number;
+
   totalPlayTime: number;
   lastSaveTimestamp: number;
   version: number;
