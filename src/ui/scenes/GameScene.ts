@@ -14,6 +14,7 @@ import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
 import { ToastManager } from '../components/Toast';
+import { ActivityLog } from '../components/ActivityLog';
 import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
@@ -142,6 +143,9 @@ export class GameScene extends Container {
 
   // Reset confirmation
   private resetOverlay!: Container;
+
+  // Activity log sidebar
+  private activityLog!: ActivityLog;
 
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
@@ -431,6 +435,9 @@ export class GameScene extends Container {
     // === TOAST & SUGGESTION TRACKING ===
     this.toastManager = new ToastManager();
     this.suggestionTracker = new SuggestionTracker(this.toastManager);
+
+    // === ACTIVITY LOG (right-column sidebar) ===
+    this.activityLog = new ActivityLog();
 
     // === SUGGEST OVERLAY ===
     this.suggestOverlay = new SuggestOverlay(gw, this.loadTime, (issueNumber) => {
@@ -898,35 +905,46 @@ export class GameScene extends Container {
       switch (event.type) {
         case 'death':
           this.showDeath();
+          this.activityLog.addGameEvent('death', `Died — lost ${formatNumber(event.karmaLost)} karma`);
           break;
         case 'rebirth':
           // Rebirth burst
           this.mandala.pulse(2);
           this.particles.burst(30, 0xbb88ff);
+          this.activityLog.addGameEvent('rebirth', `Reborn (Life #${event.lifeNumber}) +${formatNumber(event.karmaEarned)} karma`);
           break;
-        case 'upgrade_purchased':
+        case 'upgrade_purchased': {
           // Visual punch on life upgrade purchase
           this.mandala.pulse(0.8);
           this.particles.burst(15, 0xc0c0c0);
+          const lifeDef = LIFE_UPGRADES.find((u) => u.id === event.upgradeId);
+          this.activityLog.addGameEvent('upgrade_purchased', `Upgrade: ${lifeDef?.name ?? event.upgradeId}`);
           break;
-        case 'soul_upgrade_purchased':
+        }
+        case 'soul_upgrade_purchased': {
           // Bigger punch for soul upgrades
           this.mandala.pulse(1.5);
           this.particles.burst(25, 0xff88aa);
+          const soulDef = SOUL_UPGRADES.find((u) => u.id === event.upgradeId);
+          this.activityLog.addGameEvent('soul_upgrade_purchased', `Soul Upgrade: ${soulDef?.name ?? event.upgradeId} Lv${event.level}`);
           break;
+        }
         case 'enlightenment_reached':
           this.mandala.setEnlightenmentTier(event.tier);
           this.mandala.pulse(3);
           const tierColors = [0, 0x88ccff, 0xcc88ff, 0xffffff];
           this.particles.burst(40, tierColors[event.tier]);
           this.showMilestonePopup(event.tierName, event.tier);
+          this.activityLog.addGameEvent('enlightenment_reached', `${event.tierName} reached`);
           break;
         case 'nirvana_challenge_started':
           this.mandala.pulse(1.5);
           this.particles.burst(20, 0xcc88ff);
+          this.activityLog.addGameEvent('nirvana_challenge_started', 'Nirvana trial begun');
           break;
         case 'nirvana_achieved':
           this.showVictoryScreen(event.stats);
+          this.activityLog.addGameEvent('nirvana_achieved', 'NIRVANA achieved!');
           break;
       }
     });
@@ -1147,6 +1165,7 @@ export class GameScene extends Container {
     const lifeEvent = this.engine.lastLifeEvent;
     if (lifeEvent) {
       this.eventLog.addEntry(lifeEvent.text, lifeEvent.severity);
+      this.activityLog.addLifeEvent(lifeEvent.text, lifeEvent.severity);
       this.engine.lastLifeEvent = null;
     }
     this.eventLog.animate(dt);
