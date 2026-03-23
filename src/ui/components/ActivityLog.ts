@@ -19,7 +19,7 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 const MIN_SIDEBAR_WIDTH = 130;
-const MAX_SIDEBAR_WIDTH = 280;
+const MAX_SIDEBAR_WIDTH = 300;
 const MAX_ENTRIES = 200;
 
 interface OpenPR {
@@ -60,8 +60,8 @@ export class ActivityLog {
       position: fixed;
       top: 0;
       bottom: 0;
-      background: rgba(14, 14, 56, 0.95);
-      border-left: 1px solid rgba(255, 215, 0, 0.3);
+      background: rgba(20, 20, 68, 0.95);
+      border-left: 2px solid #ffd700;
       display: none;
       flex-direction: column;
       font-family: monospace;
