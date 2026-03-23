@@ -19,7 +19,7 @@ jobs:
           script: |
             // Extract issue number from branch name: community/123 → 123
             const branch = context.payload.pull_request.head.ref;
-            const match = branch.match(/^community\/(\d+)/);
+            const match = branch.match(/^community\/(?:issue-)?(\d+)/);
             if (!match) {
               console.log(`Branch ${branch} does not match community/{number} pattern`);
               return;
