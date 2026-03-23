@@ -11,6 +11,7 @@ interface LeaderboardEntry {
 export class LeaderboardPanel {
   private container: HTMLDivElement;
   private list: HTMLDivElement;
+  private highScoresSection: HTMLDivElement;
   private timer: ReturnType<typeof setInterval> | null = null;
   private playerName: string;
 
@@ -26,9 +27,9 @@ export class LeaderboardPanel {
       border-right: 2px solid #ffd700;
       font-family: monospace;
       color: #dddddd;
-      overflow-y: auto;
       z-index: 100;
       display: none;
+      flex-direction: column;
     `;
 
     const title = document.createElement('div');
@@ -37,19 +38,28 @@ export class LeaderboardPanel {
       color: #ffd700; font-size: 18px; font-weight: bold;
       text-align: center; padding: 16px 8px 8px;
       border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+      flex-shrink: 0;
     `;
     this.container.appendChild(title);
 
     this.list = document.createElement('div');
-    this.list.style.cssText = `padding: 8px;`;
+    this.list.style.cssText = `padding: 8px; overflow-y: auto; flex: 1;`;
     this.container.appendChild(this.list);
+
+    this.highScoresSection = document.createElement('div');
+    this.highScoresSection.style.cssText = `
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255, 215, 0, 0.3);
+      background: rgba(20, 20, 68, 0.98);
+    `;
+    this.container.appendChild(this.highScoresSection);
 
     document.body.appendChild(this.container);
   }
 
   /** Show the panel and start polling */
   start(): void {
-    this.container.style.display = 'block';
+    this.container.style.display = 'flex';
     this.fetch();
     this.timer = setInterval(() => this.fetch(), POLL_INTERVAL);
   }
@@ -61,7 +71,7 @@ export class LeaderboardPanel {
       this.container.style.display = 'none';
       return;
     }
-    this.container.style.display = 'block';
+    this.container.style.display = 'flex';
     this.container.style.width = `${Math.min(gameOffsetX - 20, 300)}px`;
   }
 
@@ -93,6 +103,7 @@ export class LeaderboardPanel {
 
   private render(entries: LeaderboardEntry[]): void {
     this.list.innerHTML = '';
+    this.highScoresSection.innerHTML = '';
 
     if (entries.length === 0) {
       const empty = document.createElement('div');
@@ -154,13 +165,6 @@ export class LeaderboardPanel {
     const top3 = entries.slice(0, 3);
     if (top3.length === 0) return;
 
-    const divider = document.createElement('div');
-    divider.style.cssText = `
-      margin: 16px 4px 0;
-      border-top: 1px solid rgba(255, 215, 0, 0.3);
-    `;
-    this.list.appendChild(divider);
-
     const sectionTitle = document.createElement('div');
     sectionTitle.textContent = '★ All Time High Scores';
     sectionTitle.style.cssText = `
@@ -168,7 +172,7 @@ export class LeaderboardPanel {
       text-align: center; padding: 10px 8px 6px;
       letter-spacing: 0.5px;
     `;
-    this.list.appendChild(sectionTitle);
+    this.highScoresSection.appendChild(sectionTitle);
 
     const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -177,8 +181,8 @@ export class LeaderboardPanel {
       const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
       row.style.cssText = `
         display: flex; align-items: center; gap: 8px;
-        padding: 6px 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 6px 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
         ${isPlayer ? 'background: rgba(255, 215, 0, 0.1); border-radius: 4px;' : ''}
       `;
 
@@ -211,7 +215,7 @@ export class LeaderboardPanel {
       row.appendChild(medal);
       row.appendChild(tierIcon);
       row.appendChild(info);
-      this.list.appendChild(row);
+      this.highScoresSection.appendChild(row);
     });
   }
 
