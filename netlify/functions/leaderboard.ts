@@ -10,19 +10,27 @@ function getSupabase() {
   return createClient(url, key);
 }
 
+function getInstance(event: Parameters<Handler>[0]): string {
+  // Use the Host header to identify the instance (prod vs preview deploys)
+  return event.headers?.host || 'unknown';
+}
+
 const handler: Handler = async (event) => {
   const headers = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
   };
 
-  // GET — fetch leaderboard
+  const instance = getInstance(event);
+
+  // GET — fetch leaderboard for this instance
   if (event.httpMethod === 'GET') {
     try {
       const supabase = getSupabase();
       const { data, error } = await supabase
         .from('leaderboard')
         .select('name, karma, lives, tier, updated_at')
+        .eq('instance', instance)
         .order('karma', { ascending: false })
         .limit(MAX_ENTRIES);
 
@@ -33,7 +41,7 @@ const handler: Handler = async (event) => {
     }
   }
 
-  // POST — submit/update score
+  // POST — submit/update score for this instance
   if (event.httpMethod === 'POST') {
     let body: { name?: string; karma?: number; lives?: number; tier?: number };
     try {
@@ -60,8 +68,8 @@ const handler: Handler = async (event) => {
       const { error } = await supabase
         .from('leaderboard')
         .upsert(
-          { name, karma, lives, tier, updated_at: new Date().toISOString() },
-          { onConflict: 'name' },
+          { instance, name, karma, lives, tier, updated_at: new Date().toISOString() },
+          { onConflict: 'instance,name' },
         );
 
       if (error) throw error;
