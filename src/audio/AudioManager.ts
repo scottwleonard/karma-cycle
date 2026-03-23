@@ -12,11 +12,14 @@ const AC = CONFIG.audio;
  * (0 = peaceful, 1 = maximum danger) drives real-time parameter changes
  * that shift the soundscape from meditative ASMR to dark and tense.
  */
+const MUTE_KEY = 'karma_cycle_muted';
+
 export class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private initialized = false;
   private currentIntensity = 0;
+  private muted = false;
 
   // --- Drone layer ---
   private drone: OscillatorNode | null = null;
@@ -70,8 +73,8 @@ export class AudioManager {
       return;
     }
 
-    // If the context starts suspended, try to resume
-    if (this.ctx.state === 'suspended') {
+    // If the context starts suspended, resume unless muted
+    if (this.ctx.state === 'suspended' && !this.muted) {
       this.ctx.resume().catch(() => {});
     }
 
@@ -138,7 +141,7 @@ export class AudioManager {
 
   /** Resume a suspended AudioContext (e.g., after first user gesture). */
   resumeContext(): void {
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === 'suspended' && !this.muted) {
       this.ctx.resume().catch(() => {});
     }
   }
@@ -150,6 +153,36 @@ export class AudioManager {
         this.ctx.currentTime,
         0.05,
       );
+    }
+  }
+
+  get isMuted(): boolean {
+    return this.muted;
+  }
+
+  setMuted(muted: boolean): void {
+    this.muted = muted;
+    try {
+      localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+    } catch {
+      // Ignore storage errors
+    }
+    if (!this.ctx) return;
+    if (muted) {
+      this.ctx.suspend().catch(() => {});
+    } else {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  loadMutePreference(): void {
+    try {
+      const stored = localStorage.getItem(MUTE_KEY);
+      if (stored === '1') {
+        this.muted = true;
+      }
+    } catch {
+      // Ignore storage errors
     }
   }
 
@@ -647,7 +680,7 @@ export class AudioManager {
     if (!this.ctx) return;
     if (document.hidden) {
       this.ctx.suspend().catch(() => {});
-    } else {
+    } else if (!this.muted) {
       this.ctx.resume().catch(() => {});
     }
   };
