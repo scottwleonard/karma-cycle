@@ -22,10 +22,10 @@ export class LeaderboardPanel {
       position: fixed;
       top: 0; left: 0;
       width: 260px; height: 100vh;
-      background: rgba(26, 26, 78, 0.92);
+      background: rgba(20, 20, 68, 0.95);
       border-right: 2px solid #ffd700;
       font-family: monospace;
-      color: #cccccc;
+      color: #dddddd;
       overflow-y: auto;
       z-index: 100;
       display: none;

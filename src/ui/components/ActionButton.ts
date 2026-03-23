@@ -120,13 +120,13 @@ export class ActionButton extends Container {
 
       case 'disabled':
         this.bg.roundRect(0, 0, w, h, 12);
-        this.bg.fill({ color: 0x222233 });
+        this.bg.fill({ color: 0x1e1e3c });
         this.bg.roundRect(0, 0, w, h, 12);
-        this.bg.stroke({ color: 0x555566, alpha: 0.3, width: 1 });
-        this.alpha = 0.6;
+        this.bg.stroke({ color: 0x666688, alpha: 0.35, width: 1 });
+        this.alpha = 0.7;
         this.cursor = 'default';
-        this.labelText.style.fill = 0x777788;
-        this.costText.style.fill = 0x666677;
+        this.labelText.style.fill = 0x8888aa;
+        this.costText.style.fill = 0x777799;
         this.checkmark.visible = false;
         break;
 

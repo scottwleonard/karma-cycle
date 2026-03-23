@@ -31,7 +31,7 @@ export class ToastManager {
   show(options: ToastOptions): void {
     const toast = document.createElement('div');
     toast.style.cssText = `
-      background: #1a1a4e;
+      background: #1e2058;
       border: 1px solid #ffd700;
       border-radius: 8px;
       padding: 12px 20px;
