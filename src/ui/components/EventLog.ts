@@ -36,28 +36,15 @@ export class EventLog extends Container {
     this.bg.stroke({ color: 0x5555aa, alpha: 0.5, width: 1 });
     this.addChild(this.bg);
 
-    // Title
-    const title = new Text({
-      text: 'Life Events',
-      style: {
-        fontFamily: 'monospace',
-        fontSize: 24,
-        fill: 0x8888bb,
-      },
-    });
-    title.x = 10;
-    title.y = 4;
-    this.addChild(title);
-
     // Scrollable container for entries
     this.logContainer = new Container();
     this.logContainer.x = 10;
-    this.logContainer.y = 34;
+    this.logContainer.y = 8;
     this.addChild(this.logContainer);
 
     // Mask to clip entries within the panel
     this.clipMask = new Graphics();
-    this.clipMask.rect(0, 34, width, height - 38);
+    this.clipMask.rect(0, 8, width, height - 8);
     this.clipMask.fill({ color: 0xffffff });
     this.addChild(this.clipMask);
     this.logContainer.mask = this.clipMask;
