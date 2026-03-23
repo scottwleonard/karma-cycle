@@ -98,6 +98,10 @@ export class GameScene extends Container {
   private upgradeRows: UpgradeRow[] = [];
   private upgradeContainer!: Container;
   private upgradeHeader!: Text;
+  private upgradeScrollY = 0;
+  private upgradeScrollMax = 0;
+  private upgradeContainerBaseY = 0;
+  private readonly UPGRADE_AREA_H = 620;
 
   // Event log
   private eventLog!: EventLog;
@@ -552,16 +556,23 @@ export class GameScene extends Container {
     this.upgradeHeader.y = shopY;
     this.gameView.addChild(this.upgradeHeader);
 
+    this.upgradeContainerBaseY = shopY + 30;
     this.upgradeContainer = new Container();
     this.upgradeContainer.x = 30;
-    this.upgradeContainer.y = shopY + 30;
+    this.upgradeContainer.y = this.upgradeContainerBaseY;
     this.gameView.addChild(this.upgradeContainer);
+
+    // Mask to clip upgrade rows to fixed-height area
+    const upgradeMask = new Graphics();
+    upgradeMask.rect(30, this.upgradeContainerBaseY, gw - 60, this.UPGRADE_AREA_H);
+    upgradeMask.fill({ color: 0xffffff });
+    this.gameView.addChild(upgradeMask);
+    this.upgradeContainer.mask = upgradeMask;
 
     // Build a row for every life upgrade — we'll show/hide dynamically
     LIFE_UPGRADES.forEach((def) => {
       const container = new Container();
-      container.eventMode = 'static';
-      container.cursor = 'pointer';
+      // eventMode left as default — tap handled by scroll overlay below
 
       const bg = new Graphics();
       container.addChild(bg);
@@ -600,19 +611,60 @@ export class GameScene extends Container {
       costText.y = 30;
       container.addChild(costText);
 
-      container.on('pointertap', () => {
-        if (buyLifeUpgrade(this.engine.state, def)) {
-          this.engine.events.emit({ type: 'upgrade_purchased', upgradeId: def.id });
-        }
-      });
-
       this.upgradeRows.push({ def, container, bg, nameText, costText });
       // Don't add to upgradeContainer yet — layoutUpgrades will handle it
     });
 
-    // Event log — positioned dynamically after upgrades
+    // Interactive overlay for scroll + tap on upgrade area
+    const upgradeOverlay = new Graphics();
+    upgradeOverlay.rect(0, 0, gw - 60, this.UPGRADE_AREA_H);
+    upgradeOverlay.fill({ color: 0xffffff, alpha: 0 });
+    upgradeOverlay.x = 30;
+    upgradeOverlay.y = this.upgradeContainerBaseY;
+    upgradeOverlay.eventMode = 'static';
+    upgradeOverlay.cursor = 'pointer';
+    this.gameView.addChild(upgradeOverlay);
+
+    let pointerStartY = 0;
+    let scrollAtStart = 0;
+    let dragMoved = false;
+
+    upgradeOverlay.on('pointerdown', (e) => {
+      pointerStartY = e.global.y;
+      scrollAtStart = this.upgradeScrollY;
+      dragMoved = false;
+    });
+
+    upgradeOverlay.on('pointermove', (e) => {
+      if (!(e.buttons & 1)) return;
+      const dy = (e.global.y - pointerStartY) / this.layout.scale;
+      if (Math.abs(dy) > 8) {
+        dragMoved = true;
+        this.upgradeScrollY = Math.max(0, Math.min(this.upgradeScrollMax, scrollAtStart - dy));
+        this.upgradeContainer.y = this.upgradeContainerBaseY - this.upgradeScrollY;
+      }
+    });
+
+    upgradeOverlay.on('pointertap', (e) => {
+      if (dragMoved) { dragMoved = false; return; }
+      // Find which row was tapped based on position
+      const local = e.getLocalPosition(this.upgradeContainer);
+      for (const row of this.upgradeRows) {
+        if (!row.container.parent) continue; // not visible
+        const ry = row.container.y;
+        if (local.y >= ry && local.y <= ry + 56) {
+          if (buyLifeUpgrade(this.engine.state, row.def)) {
+            this.engine.events.emit({ type: 'upgrade_purchased', upgradeId: row.def.id });
+          }
+          break;
+        }
+      }
+    });
+
+    // Event log — fixed position below upgrade area
     this.eventLog = new EventLog(gw - 80, 200);
     this.eventLog.x = 10;
+    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 20;
     this.gameView.addChild(this.eventLog);
   }
 
@@ -668,9 +720,10 @@ export class GameScene extends Container {
     // Show/hide header
     this.upgradeHeader.visible = visibleCount > 0;
 
-    // Position event log below upgrades
-    const headerOffset = visibleCount > 0 ? 30 : 0;
-    this.eventLog.y = this.upgradeContainer.y + y + headerOffset;
+    // Update scroll bounds and clamp current scroll
+    this.upgradeScrollMax = Math.max(0, y - this.UPGRADE_AREA_H);
+    this.upgradeScrollY = Math.max(0, Math.min(this.upgradeScrollMax, this.upgradeScrollY));
+    this.upgradeContainer.y = this.upgradeContainerBaseY - this.upgradeScrollY;
   }
 
   private buildToggle(labelText: string, color: number, onClick: () => void): Container {
