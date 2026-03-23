@@ -2,6 +2,8 @@ import type { GameState } from './GameState';
 
 export function createDefaultState(): GameState {
   return {
+    playerName: '',
+
     karma: 0,
     currentKarma: 0,
     wealth: 0,

@@ -6,7 +6,7 @@ interface SaveData {
   state: GameState;
 }
 
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 export function serialize(state: GameState): string {
   const saveData: SaveData = {
@@ -63,6 +63,12 @@ function migrate(saveData: SaveData): SaveData {
     const s = saveData.state as any;
     if (s.bankedKarma === undefined) s.bankedKarma = 0;
     saveData.version = 4;
+  }
+
+  if (saveData.version < 5) {
+    const s = saveData.state as any;
+    if (s.playerName === undefined) s.playerName = '';
+    saveData.version = 5;
   }
 
   return saveData;

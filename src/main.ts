@@ -6,6 +6,8 @@ import { applyOfflineProgress } from './engine/offlineProgress';
 import { calculateLayout } from './ui/layout';
 import { GameScene } from './ui/scenes/GameScene';
 import { AudioManager } from './audio/AudioManager';
+import { showNamePrompt } from './ui/components/NamePrompt';
+import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
 
 async function main() {
   const app = new Application();
@@ -29,6 +31,12 @@ async function main() {
   }
   const state = saveManager.load();
 
+  // Prompt for player name if not set
+  if (!state.playerName) {
+    state.playerName = await showNamePrompt();
+    saveManager.save(state);
+  }
+
   // Create engine
   const engine = new GameEngine(state);
 
@@ -46,6 +54,22 @@ async function main() {
   const scene = new GameScene(engine, layout, audioManager);
   app.stage.addChild(scene);
 
+  // Leaderboard panel (left side of screen)
+  const leaderboard = new LeaderboardPanel(engine.state.playerName);
+  leaderboard.updateLayout(layout.offsetX);
+  leaderboard.start();
+
+  // Submit score periodically (every 30s with auto-save)
+  let lastSubmittedKarma = 0;
+  const submitScore = () => {
+    const s = engine.state;
+    const totalKarma = Math.floor(s.karma + s.currentKarma);
+    if (totalKarma > lastSubmittedKarma) {
+      lastSubmittedKarma = totalKarma;
+      leaderboard.submitScore(totalKarma, s.lifeNumber, s.enlightenmentTier);
+    }
+  };
+
   // Game loop
   app.ticker.add((ticker) => {
     const dtSeconds = ticker.deltaMS / 1000;
@@ -53,11 +77,13 @@ async function main() {
     scene.update(dtSeconds);
   });
 
-  // Auto-save
+  // Auto-save (also submit score)
+  setInterval(() => submitScore(), CONFIG.save.autoSaveIntervalMs);
   saveManager.startAutoSave(() => engine.state);
 
   // Save on exit
   window.addEventListener('beforeunload', () => {
+    submitScore();
     saveManager.save(engine.state);
   });
 
@@ -67,6 +93,7 @@ async function main() {
     scene.x = newLayout.offsetX;
     scene.y = newLayout.offsetY;
     scene.scale.set(newLayout.scale);
+    leaderboard.updateLayout(newLayout.offsetX);
   });
 }
 

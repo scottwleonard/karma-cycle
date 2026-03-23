@@ -22,6 +22,8 @@ export interface VictoryStats {
 }
 
 export interface GameState {
+  playerName: string;
+
   karma: number;
   currentKarma: number;
   wealth: number;
