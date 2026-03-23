@@ -266,59 +266,87 @@ export class ActivityLog {
     const hasVotedDown = votes.downVoters.some(
       (v) => v.toLowerCase() === this.playerName.toLowerCase(),
     );
-    const hasVoted = hasVotedUp || hasVotedDown;
 
-    const makeVoteBtn = (direction: 'up' | 'down') => {
+    // Track current vote state (mutable so buttons can update each other)
+    let currentVoteUp = hasVotedUp;
+    let currentVoteDown = hasVotedDown;
+
+    const upBtn = document.createElement('button');
+    const downBtn = document.createElement('button');
+
+    const refreshBtn = (btn: HTMLButtonElement, direction: 'up' | 'down') => {
       const isUp = direction === 'up';
-      const isThis = isUp ? hasVotedUp : hasVotedDown;
+      const isThis = isUp ? currentVoteUp : currentVoteDown;
       const color = isUp ? '#ffd700' : '#cc6666';
       const label = isUp ? '👍' : '👎';
-
-      const btn = document.createElement('button');
       btn.style.cssText = `
         background: ${isThis ? (isUp ? 'rgba(255,215,0,0.15)' : 'rgba(204,102,102,0.15)') : 'rgba(255,255,255,0.05)'};
         border: 1px solid ${isThis ? color : 'rgba(255,255,255,0.15)'};
-        border-radius: 4px; padding: 2px 8px; cursor: ${hasVoted ? 'default' : 'pointer'};
+        border-radius: 4px; padding: 2px 8px; cursor: pointer;
         color: ${color}; font-family: monospace; font-size: 10px;
-        opacity: ${hasVoted && !isThis ? '0.3' : hasVoted ? '0.7' : '1'};
+        opacity: ${isThis ? '0.85' : '1'};
       `;
       btn.textContent = isThis ? `${label} ✓` : label;
+    };
 
-      if (!hasVoted) {
-        btn.addEventListener('click', async () => {
-          btn.disabled = true;
-          btn.textContent = '...';
-          try {
-            const res = await fetch('/.netlify/functions/vote', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pr_number: issue.number, player_name: this.playerName, direction }),
-            });
-            const result = (await res.json()) as { success: boolean; up?: number; down?: number; merged?: boolean; rejected?: boolean };
-            if (result.success) {
-              const newUp = result.up ?? votes.up;
-              const newDown = result.down ?? votes.down;
-              btn.textContent = result.merged ? '🎉' : result.rejected ? '🚫' : `${label} ✓`;
-              btn.style.opacity = '0.7';
-              btn.style.cursor = 'default';
-              // Update progress
-              upFill.style.width = `${Math.min(50, (newUp / VOTES_TO_MERGE) * 50)}%`;
-              downFill.style.width = `${Math.min(50, (newDown / VOTES_TO_REJECT) * 50)}%`;
-              progressText.textContent = result.merged
-                ? 'Approved!'
-                : result.rejected
-                  ? 'Rejected'
-                  : `👍 ${newUp}/${VOTES_TO_MERGE}  ·  👎 ${newDown}/${VOTES_TO_REJECT}`;
-            } else {
-              btn.textContent = `${label} ✓`;
-              btn.style.opacity = '0.7';
+    const makeVoteBtn = (direction: 'up' | 'down') => {
+      const isUp = direction === 'up';
+      const btn = isUp ? upBtn : downBtn;
+      const label = isUp ? '👍' : '👎';
+
+      refreshBtn(btn, direction);
+
+      btn.addEventListener('click', async () => {
+        // Ignore click if already voted this direction
+        const isThis = isUp ? currentVoteUp : currentVoteDown;
+        if (isThis) return;
+
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          const res = await fetch('/.netlify/functions/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pr_number: issue.number, player_name: this.playerName, direction }),
+          });
+          const result = (await res.json()) as { success: boolean; up?: number; down?: number; merged?: boolean; rejected?: boolean };
+          if (result.success) {
+            const newUp = result.up ?? votes.up;
+            const newDown = result.down ?? votes.down;
+            // Update mutable vote state and refresh both buttons
+            currentVoteUp = direction === 'up';
+            currentVoteDown = direction === 'down';
+            btn.disabled = false;
+            refreshBtn(upBtn, 'up');
+            refreshBtn(downBtn, 'down');
+            if (result.merged) {
+              upBtn.textContent = '🎉';
+              downBtn.textContent = '🎉';
+              upBtn.style.cursor = 'default';
+              downBtn.style.cursor = 'default';
+            } else if (result.rejected) {
+              upBtn.textContent = '🚫';
+              downBtn.textContent = '🚫';
+              upBtn.style.cursor = 'default';
+              downBtn.style.cursor = 'default';
             }
-          } catch {
+            // Update progress
+            upFill.style.width = `${Math.min(50, (newUp / VOTES_TO_MERGE) * 50)}%`;
+            downFill.style.width = `${Math.min(50, (newDown / VOTES_TO_REJECT) * 50)}%`;
+            progressText.textContent = result.merged
+              ? 'Approved!'
+              : result.rejected
+                ? 'Rejected'
+                : `👍 ${newUp}/${VOTES_TO_MERGE}  ·  👎 ${newDown}/${VOTES_TO_REJECT}`;
+          } else {
             btn.textContent = label;
             btn.disabled = false;
           }
-        });
-      }
+        } catch {
+          btn.textContent = label;
+          btn.disabled = false;
+        }
+      });
 
       return btn;
     };
