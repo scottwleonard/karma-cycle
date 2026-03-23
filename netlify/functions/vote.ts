@@ -74,15 +74,22 @@ async function tryReject(token: string, prNumber: number, downvoters: string[]):
   });
 
   // Close the PR
-  await fetch(`https://api.github.com/repos/${REPO}/pulls/${prNumber}`, {
+  const closeRes = await fetch(`https://api.github.com/repos/${REPO}/pulls/${prNumber}`, {
     method: 'PATCH', headers: h,
     body: JSON.stringify({ state: 'closed' }),
   });
+  if (!closeRes.ok) {
+    console.error(`Failed to close PR #${prNumber}: ${closeRes.status} ${await closeRes.text()}`);
+    return false;
+  }
 
   // Delete the branch
-  await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${pr.head.ref}`, {
+  const delRes = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${pr.head.ref}`, {
     method: 'DELETE', headers: h,
   });
+  if (!delRes.ok) {
+    console.error(`Failed to delete branch ${pr.head.ref}: ${delRes.status}`);
+  }
 
   // Find linked issue number from PR body or branch name
   const issueMatch = pr.head.ref.match(/(?:issue-)?(\d+)/) || pr.body?.match(/#(\d+)/);
@@ -163,11 +170,15 @@ const handler: Handler = async (event) => {
       if (token) {
         for (const [prNum, info] of Object.entries(counts)) {
           const n = parseInt(prNum);
-          if (info.up >= VOTES_TO_MERGE) {
-            tryMerge(token, n, info.upVoters).catch(() => {});
-          }
-          if (info.down >= VOTES_TO_REJECT) {
-            tryReject(token, n, info.downVoters).catch(() => {});
+          try {
+            if (info.up >= VOTES_TO_MERGE) {
+              await tryMerge(token, n, info.upVoters);
+            }
+            if (info.down >= VOTES_TO_REJECT) {
+              await tryReject(token, n, info.downVoters);
+            }
+          } catch (e) {
+            console.error(`Safety net failed for PR #${prNum}:`, e);
           }
         }
       }
