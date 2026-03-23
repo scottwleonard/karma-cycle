@@ -97,7 +97,7 @@ const handler: Handler = async (event) => {
     body: JSON.stringify({
       title,
       body: issueBody,
-      labels: ['community-request'],
+      labels: ['community-request', 'approved'],
     }),
   });
 
