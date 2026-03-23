@@ -57,12 +57,15 @@ export class LeaderboardPanel {
   /** Update layout based on available space */
   updateLayout(gameOffsetX: number): void {
     // Only show if there's enough room to the left of the game
-    if (gameOffsetX < 280) {
+    if (gameOffsetX < 140) {
       this.container.style.display = 'none';
       return;
     }
+    const panelWidth = Math.min(gameOffsetX - 20, 280);
+    const panelLeft = Math.floor((gameOffsetX - panelWidth) / 2);
     this.container.style.display = 'block';
-    this.container.style.width = `${Math.min(gameOffsetX - 20, 300)}px`;
+    this.container.style.left = `${panelLeft}px`;
+    this.container.style.width = `${panelWidth}px`;
   }
 
   /** Submit player score and refresh the display */

@@ -509,7 +509,7 @@ export class GameScene extends Container {
         this.particles.burst(5, 0xff8c00);
       }
     });
-    this.feedButton.x = 30;
+    this.feedButton.x = 40;
     this.feedButton.y = btnY;
     this.gameView.addChild(this.feedButton);
 
@@ -525,7 +525,7 @@ export class GameScene extends Container {
         this.particles.burst(5, 0x20b2aa);
       }
     });
-    this.repairButton.x = 40 + btnW;
+    this.repairButton.x = 50 + btnW;
     this.repairButton.y = btnY;
     this.gameView.addChild(this.repairButton);
 
@@ -537,7 +537,7 @@ export class GameScene extends Container {
       this.mandala.pulse(2);
       this.particles.burst(30, 0xbb88ff);
     });
-    this.rebirthButton.x = 50 + btnW * 2;
+    this.rebirthButton.x = 60 + btnW * 2;
     this.rebirthButton.y = btnY;
     this.gameView.addChild(this.rebirthButton);
 
@@ -547,7 +547,7 @@ export class GameScene extends Container {
     this.autoFeedToggle = this.buildToggle('Auto Feed', CONFIG.display.hungerColor, () => {
       this.engine.state.autoFeedEnabled = !this.engine.state.autoFeedEnabled;
     });
-    this.autoFeedToggle.x = 30;
+    this.autoFeedToggle.x = 40;
     this.autoFeedToggle.y = toggleY;
     this.autoFeedToggle.visible = false;
     this.gameView.addChild(this.autoFeedToggle);
@@ -555,7 +555,7 @@ export class GameScene extends Container {
     this.autoRepairToggle = this.buildToggle('Auto Repair', CONFIG.display.shelterColor, () => {
       this.engine.state.autoRepairEnabled = !this.engine.state.autoRepairEnabled;
     });
-    this.autoRepairToggle.x = 280;
+    this.autoRepairToggle.x = 50 + btnW;
     this.autoRepairToggle.y = toggleY;
     this.autoRepairToggle.visible = false;
     this.gameView.addChild(this.autoRepairToggle);
@@ -579,13 +579,13 @@ export class GameScene extends Container {
 
     this.upgradeContainerBaseY = shopY + 30;
     this.upgradeContainer = new Container();
-    this.upgradeContainer.x = 30;
+    this.upgradeContainer.x = 40;
     this.upgradeContainer.y = this.upgradeContainerBaseY;
     this.gameView.addChild(this.upgradeContainer);
 
     // Mask to clip upgrade rows to fixed-height area
     const upgradeMask = new Graphics();
-    upgradeMask.rect(30, this.upgradeContainerBaseY, gw - 60, this.UPGRADE_AREA_H);
+    upgradeMask.rect(40, this.upgradeContainerBaseY, gw - 80, this.UPGRADE_AREA_H);
     upgradeMask.fill({ color: 0xffffff });
     this.gameView.addChild(upgradeMask);
     this.upgradeContainer.mask = upgradeMask;
@@ -638,9 +638,9 @@ export class GameScene extends Container {
 
     // Interactive overlay for scroll + tap on upgrade area
     const upgradeOverlay = new Graphics();
-    upgradeOverlay.rect(0, 0, gw - 60, this.UPGRADE_AREA_H);
+    upgradeOverlay.rect(0, 0, gw - 80, this.UPGRADE_AREA_H);
     upgradeOverlay.fill({ color: 0xffffff, alpha: 0 });
-    upgradeOverlay.x = 30;
+    upgradeOverlay.x = 40;
     upgradeOverlay.y = this.upgradeContainerBaseY;
     upgradeOverlay.eventMode = 'static';
     upgradeOverlay.cursor = 'pointer';
@@ -691,7 +691,7 @@ export class GameScene extends Container {
     });
 
     // Scrollbar track (right edge of upgrade area)
-    const scrollbarX = gw - 22;
+    const scrollbarX = gw - 50;
     this.upgradeScrollTrack = new Graphics();
     this.upgradeScrollTrack.rect(0, 0, 8, this.UPGRADE_AREA_H);
     this.upgradeScrollTrack.fill({ color: 0x2a2a5e });
@@ -711,7 +711,7 @@ export class GameScene extends Container {
 
     // Event log — fixed position below upgrade area
     this.eventLog = new EventLog(gw - 80, 200);
-    this.eventLog.x = 10;
+    this.eventLog.x = 40;
     this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 20;
     this.gameView.addChild(this.eventLog);
   }
@@ -719,7 +719,7 @@ export class GameScene extends Container {
   /** Rebuild visible upgrade rows — only show unpurchased ones */
   private layoutUpgrades(): void {
     const gw = CONFIG.display.referenceWidth;
-    const rowW = gw - 60;
+    const rowW = gw - 80;
     const rowH = 56;
     const gap = 4;
     const state = this.engine.state;
