@@ -68,13 +68,11 @@ const handler: Handler = async (event) => {
     );
 
     if (existing) {
-      // Only update if karma is higher
-      if (karma > existing.karma) {
-        existing.karma = karma;
-        existing.lives = lives;
-        existing.tier = tier;
-        existing.updatedAt = Date.now();
-      }
+      // Always update to reflect current banked karma in real time
+      existing.karma = karma;
+      existing.lives = lives;
+      existing.tier = tier;
+      existing.updatedAt = Date.now();
     } else {
       lb.entries.push({ name, karma, lives, tier, updatedAt: Date.now() });
     }

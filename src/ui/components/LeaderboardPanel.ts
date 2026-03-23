@@ -1,5 +1,5 @@
 const TIER_NAMES = ['', '☀', '🌳', '🕉'];
-const POLL_INTERVAL = 60_000;
+const POLL_INTERVAL = 10_000;
 
 interface LeaderboardEntry {
   name: string;
@@ -65,7 +65,7 @@ export class LeaderboardPanel {
     this.container.style.width = `${Math.min(gameOffsetX - 20, 300)}px`;
   }
 
-  /** Submit player score to leaderboard */
+  /** Submit player score and refresh the display */
   async submitScore(karma: number, lives: number, tier: number): Promise<void> {
     try {
       await fetch('/.netlify/functions/leaderboard', {
@@ -73,6 +73,8 @@ export class LeaderboardPanel {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: this.playerName, karma, lives, tier }),
       });
+      // Refresh display immediately after submitting
+      this.fetch();
     } catch {
       // Silent fail — leaderboard is non-critical
     }

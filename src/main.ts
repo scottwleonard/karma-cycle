@@ -59,15 +59,10 @@ async function main() {
   leaderboard.updateLayout(layout.offsetX);
   leaderboard.start();
 
-  // Submit score periodically (every 30s with auto-save)
-  let lastSubmittedKarma = 0;
+  // Submit score periodically — uses banked karma (state.karma)
   const submitScore = () => {
     const s = engine.state;
-    const totalKarma = Math.floor(s.karma + s.currentKarma);
-    if (totalKarma > lastSubmittedKarma) {
-      lastSubmittedKarma = totalKarma;
-      leaderboard.submitScore(totalKarma, s.lifeNumber, s.enlightenmentTier);
-    }
+    leaderboard.submitScore(Math.floor(s.karma), s.lifeNumber, s.enlightenmentTier);
   };
 
   // Game loop
@@ -77,8 +72,8 @@ async function main() {
     scene.update(dtSeconds);
   });
 
-  // Auto-save (also submit score)
-  setInterval(() => submitScore(), CONFIG.save.autoSaveIntervalMs);
+  // Submit scores every 10s for real-time leaderboard
+  setInterval(() => submitScore(), 10_000);
   saveManager.startAutoSave(() => engine.state);
 
   // Save on exit
