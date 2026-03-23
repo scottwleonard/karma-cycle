@@ -22,10 +22,10 @@ const MIN_SIDEBAR_WIDTH = 130;
 const MAX_SIDEBAR_WIDTH = 280;
 const MAX_ENTRIES = 200;
 
-interface ClosedIssue {
+interface OpenPR {
   number: number;
   title: string;
-  previewUrl?: string;
+  previewUrl: string;
   issueUrl: string;
 }
 
@@ -136,11 +136,7 @@ export class ActivityLog {
     return tab;
   }
 
-  private communityLoaded = false;
-
   private async loadCommunityUpdates(): Promise<void> {
-    if (this.communityLoaded) return;
-
     this.communityPanel.innerHTML = '';
     const loading = document.createElement('div');
     loading.style.cssText = 'padding: 12px 8px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
@@ -150,14 +146,14 @@ export class ActivityLog {
     try {
       const res = await fetch('/.netlify/functions/closed-issues');
       if (!res.ok) throw new Error('fetch failed');
-      const issues = (await res.json()) as ClosedIssue[];
+      const prs = (await res.json()) as OpenPR[];
 
       this.communityPanel.innerHTML = '';
 
-      if (issues.length === 0) {
+      if (prs.length === 0) {
         const empty = document.createElement('div');
         empty.style.cssText = 'padding: 12px 8px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
-        empty.textContent = 'No community updates yet.';
+        empty.textContent = 'No proposed changes right now.';
         this.communityPanel.appendChild(empty);
         return;
       }
@@ -170,14 +166,13 @@ export class ActivityLog {
         border-bottom: 1px solid rgba(255, 215, 0, 0.08);
         flex-shrink: 0;
       `;
-      header.textContent = 'Shipped features — try & vote!';
+      header.textContent = 'Proposed changes — try & vote!';
       this.communityPanel.appendChild(header);
 
-      for (const issue of issues) {
-        this.communityPanel.appendChild(this.makeCommunityEntry(issue));
+      for (const pr of prs) {
+        this.communityPanel.appendChild(this.makeCommunityEntry(pr));
       }
 
-      this.communityLoaded = true;
     } catch {
       this.communityPanel.innerHTML = '';
       const err = document.createElement('div');
@@ -187,7 +182,7 @@ export class ActivityLog {
     }
   }
 
-  private makeCommunityEntry(issue: ClosedIssue): HTMLDivElement {
+  private makeCommunityEntry(issue: OpenPR): HTMLDivElement {
     const entry = document.createElement('div');
     entry.style.cssText = `
       padding: 6px 8px;
@@ -204,10 +199,8 @@ export class ActivityLog {
     const links = document.createElement('div');
     links.style.cssText = 'display: flex; gap: 6px; flex-wrap: wrap;';
 
-    if (issue.previewUrl) {
-      const preview = this.makeLink('▶ Preview', issue.previewUrl, '#88ccff');
-      links.appendChild(preview);
-    }
+    const preview = this.makeLink('▶ Preview', issue.previewUrl, '#88ccff');
+    links.appendChild(preview);
 
     const vote = this.makeLink('👍 Vote', `${issue.issueUrl}#issue-comment-box`, '#ffd700');
     links.appendChild(vote);
