@@ -1,5 +1,6 @@
 import type { GameState } from '../state/GameState';
 import { clamp } from '../utils/math';
+import { LIFE_UPGRADES } from '../types/upgrades';
 
 export type EventSeverity = 'positive' | 'neutral' | 'negative';
 
@@ -236,17 +237,36 @@ const LIFE_EVENTS: LifeEventDefinition[] = [
 ];
 
 /**
+ * Returns the combined negative event weight multiplier from purchased life upgrades.
+ */
+function getNegativeEventMultiplier(state: GameState): number {
+  let multiplier = 1;
+  for (const def of LIFE_UPGRADES) {
+    if (
+      def.negativeEventWeightMultiplier !== undefined &&
+      state.lifeUpgrades.some((u) => u.id === def.id && u.purchased)
+    ) {
+      multiplier *= def.negativeEventWeightMultiplier;
+    }
+  }
+  return multiplier;
+}
+
+/**
  * Picks a weighted random event from the pool, filtered by min life time.
+ * Negative events have their weights scaled down by any purchased protection upgrades.
  */
 function pickEvent(state: GameState): LifeEventDefinition {
+  const negMult = getNegativeEventMultiplier(state);
   const eligible = LIFE_EVENTS.filter(
     (e) => !e.minLifeTime || state.lifeTimeElapsed >= e.minLifeTime,
   );
-  const totalWeight = eligible.reduce((sum, e) => sum + e.weight, 0);
+  const weights = eligible.map((e) => e.severity === 'negative' ? e.weight * negMult : e.weight);
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
   let roll = Math.random() * totalWeight;
-  for (const event of eligible) {
-    roll -= event.weight;
-    if (roll <= 0) return event;
+  for (let i = 0; i < eligible.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return eligible[i];
   }
   return eligible[eligible.length - 1];
 }

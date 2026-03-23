@@ -23,6 +23,8 @@ export interface LifeUpgradeDefinition {
   karmaMultiplier?: number;
   /** Flat karma drain per second (positive = draining karma) */
   karmaDrain?: number;
+  /** Multiplier applied to negative life event weights (<1 = less likely) */
+  negativeEventWeightMultiplier?: number;
 }
 
 export const SOUL_UPGRADES: SoulUpgradeDefinition[] = [
@@ -110,6 +112,32 @@ export const LIFE_UPGRADES: LifeUpgradeDefinition[] = [
     description: 'Health regen +100%',
     cost: 40,
     category: 'survival',
+  },
+
+  {
+    id: 'self_defense',
+    name: 'Self Defense',
+    description: 'Bad events 30% less likely',
+    cost: 35,
+    category: 'survival',
+    negativeEventWeightMultiplier: 0.7,
+  },
+  {
+    id: 'iron_locks',
+    name: 'Iron Locks',
+    description: 'Secure your home — bad events 40% less likely',
+    cost: 60,
+    category: 'survival',
+    negativeEventWeightMultiplier: 0.6,
+  },
+  {
+    id: 'spirit_ward',
+    name: 'Spirit Ward',
+    description: 'Karma shields you — bad events 50% less likely · Karma +10%',
+    cost: 100,
+    category: 'spiritual',
+    karmaMultiplier: 1.1,
+    negativeEventWeightMultiplier: 0.5,
   },
 
   // === SPIRITUAL — boost karma ===
