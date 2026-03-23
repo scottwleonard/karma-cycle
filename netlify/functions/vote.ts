@@ -15,6 +15,50 @@ function getInstance(event: Parameters<Handler>[0]): string {
   return event.headers?.host || 'unknown';
 }
 
+/** Attempt to merge a PR. No-ops if already merged. */
+async function tryMerge(token: string, prNumber: number, voters: string[]): Promise<boolean> {
+  const ghHeaders = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github+json',
+    'Content-Type': 'application/json',
+  };
+
+  // Check if PR is still open
+  const prRes = await fetch(`https://api.github.com/repos/${REPO}/pulls/${prNumber}`, {
+    headers: ghHeaders,
+  });
+  if (!prRes.ok) return false;
+  const pr = (await prRes.json()) as { state: string };
+  if (pr.state !== 'open') return false;
+
+  // Comment on PR
+  await fetch(`https://api.github.com/repos/${REPO}/issues/${prNumber}/comments`, {
+    method: 'POST',
+    headers: ghHeaders,
+    body: JSON.stringify({
+      body: `🗳️ This PR received ${voters.length} community votes and has been auto-approved!\n\nVoters: ${voters.join(', ')}`,
+    }),
+  });
+
+  // Merge the PR
+  const mergeRes = await fetch(`https://api.github.com/repos/${REPO}/pulls/${prNumber}/merge`, {
+    method: 'PUT',
+    headers: ghHeaders,
+    body: JSON.stringify({
+      merge_method: 'squash',
+      commit_title: `Community: merge PR #${prNumber} (${voters.length} votes)`,
+    }),
+  });
+
+  if (!mergeRes.ok) {
+    const mergeErr = await mergeRes.text();
+    console.error(`Failed to merge PR #${prNumber}: ${mergeRes.status} ${mergeErr}`);
+    return false;
+  }
+
+  return true;
+}
+
 const handler: Handler = async (event) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -42,6 +86,16 @@ const handler: Handler = async (event) => {
         }
         counts[row.pr_number].count++;
         counts[row.pr_number].voters.push(row.player_name);
+      }
+
+      // Safety net: retry merging any PR that has enough votes but may still be open
+      const token = process.env.GITHUB_TOKEN;
+      if (token) {
+        for (const [prNum, info] of Object.entries(counts)) {
+          if (info.count >= VOTES_TO_MERGE) {
+            tryMerge(token, parseInt(prNum), info.voters).catch(() => {});
+          }
+        }
       }
 
       return { statusCode: 200, headers, body: JSON.stringify(counts) };
@@ -79,52 +133,29 @@ const handler: Handler = async (event) => {
         throw insertError;
       }
 
-      // Count total votes for this PR on this instance
-      const { count, error: countError } = await supabase
+      // Get all voters for this PR
+      const { data: voterRows } = await supabase
         .from('votes')
-        .select('*', { count: 'exact', head: true })
+        .select('player_name')
         .eq('instance', instance)
         .eq('pr_number', prNumber);
 
-      if (countError) throw countError;
-
-      const totalVotes = count ?? 0;
+      const voters = (voterRows ?? []).map((r) => r.player_name);
+      const totalVotes = voters.length;
+      let merged = false;
 
       // Auto-merge if threshold reached
       if (totalVotes >= VOTES_TO_MERGE) {
         const token = process.env.GITHUB_TOKEN;
         if (token) {
-          const ghHeaders = {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/vnd.github+json',
-            'Content-Type': 'application/json',
-          };
-
-          // Comment on PR before merging
-          await fetch(`https://api.github.com/repos/${REPO}/issues/${prNumber}/comments`, {
-            method: 'POST',
-            headers: ghHeaders,
-            body: JSON.stringify({
-              body: `🗳️ This PR received ${totalVotes} community votes and has been auto-approved!\n\nVoters: ${(await getVoterNames(supabase, instance, prNumber)).join(', ')}`,
-            }),
-          });
-
-          // Merge the PR
-          await fetch(`https://api.github.com/repos/${REPO}/pulls/${prNumber}/merge`, {
-            method: 'PUT',
-            headers: ghHeaders,
-            body: JSON.stringify({
-              merge_method: 'squash',
-              commit_title: `Community: merge PR #${prNumber} (${totalVotes} votes)`,
-            }),
-          });
+          merged = await tryMerge(token, prNumber, voters);
         }
       }
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ success: true, totalVotes, merged: totalVotes >= VOTES_TO_MERGE }),
+        body: JSON.stringify({ success: true, totalVotes, merged }),
       };
     } catch (e) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: String(e) }) };
@@ -133,18 +164,5 @@ const handler: Handler = async (event) => {
 
   return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 };
-
-async function getVoterNames(
-  supabase: ReturnType<typeof createClient>,
-  instance: string,
-  prNumber: number,
-): Promise<string[]> {
-  const { data } = await supabase
-    .from('votes')
-    .select('player_name')
-    .eq('instance', instance)
-    .eq('pr_number', prNumber);
-  return (data ?? []).map((r) => r.player_name);
-}
 
 export { handler };
