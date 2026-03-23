@@ -1,5 +1,4 @@
 import type { Handler } from '@netlify/functions';
-import { getStore } from '@netlify/blobs';
 
 interface LeaderboardEntry {
   name: string;
@@ -14,16 +13,67 @@ interface Leaderboard {
 }
 
 const MAX_ENTRIES = 50;
+const GIST_FILENAME = 'karma-cycle-leaderboard.json';
 
-async function getLeaderboard(): Promise<Leaderboard> {
-  const store = getStore('leaderboard');
-  const raw = await store.get('rankings', { type: 'json' }) as Leaderboard | null;
-  return raw ?? { entries: [] };
+async function getGistId(token: string): Promise<string | null> {
+  // Search user's gists for the leaderboard file
+  const res = await fetch('https://api.github.com/gists?per_page=100', {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+  });
+  if (!res.ok) return null;
+  const gists = (await res.json()) as { id: string; files: Record<string, unknown> }[];
+  const gist = gists.find((g) => GIST_FILENAME in g.files);
+  return gist?.id ?? null;
 }
 
-async function saveLeaderboard(lb: Leaderboard): Promise<void> {
-  const store = getStore('leaderboard');
-  await store.setJSON('rankings', lb);
+async function getLeaderboard(token: string): Promise<{ gistId: string | null; lb: Leaderboard }> {
+  const gistId = await getGistId(token);
+  if (!gistId) return { gistId: null, lb: { entries: [] } };
+
+  const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+  });
+  if (!res.ok) return { gistId, lb: { entries: [] } };
+
+  const gist = (await res.json()) as { files: Record<string, { content: string }> };
+  try {
+    const content = gist.files[GIST_FILENAME]?.content;
+    return { gistId, lb: content ? JSON.parse(content) : { entries: [] } };
+  } catch {
+    return { gistId, lb: { entries: [] } };
+  }
+}
+
+async function saveLeaderboard(token: string, gistId: string | null, lb: Leaderboard): Promise<void> {
+  const content = JSON.stringify(lb, null, 2);
+
+  if (gistId) {
+    // Update existing gist
+    await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } }),
+    });
+  } else {
+    // Create new gist
+    await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        description: 'Karma Cycle Leaderboard',
+        public: false,
+        files: { [GIST_FILENAME]: { content } },
+      }),
+    });
+  }
 }
 
 const handler: Handler = async (event) => {
@@ -32,9 +82,14 @@ const handler: Handler = async (event) => {
     'Cache-Control': 'no-cache',
   };
 
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfigured' }) };
+  }
+
   // GET — fetch leaderboard
   if (event.httpMethod === 'GET') {
-    const lb = await getLeaderboard();
+    const { lb } = await getLeaderboard(token);
     return { statusCode: 200, headers, body: JSON.stringify(lb.entries) };
   }
 
@@ -60,7 +115,7 @@ const handler: Handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid values' }) };
     }
 
-    const lb = await getLeaderboard();
+    const { gistId, lb } = await getLeaderboard(token);
 
     // Update existing entry or add new one
     const existing = lb.entries.find(
@@ -68,7 +123,6 @@ const handler: Handler = async (event) => {
     );
 
     if (existing) {
-      // Always update to reflect current banked karma in real time
       existing.karma = karma;
       existing.lives = lives;
       existing.tier = tier;
@@ -81,7 +135,7 @@ const handler: Handler = async (event) => {
     lb.entries.sort((a, b) => b.karma - a.karma);
     lb.entries = lb.entries.slice(0, MAX_ENTRIES);
 
-    await saveLeaderboard(lb);
+    await saveLeaderboard(token, gistId, lb);
 
     return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
   }
