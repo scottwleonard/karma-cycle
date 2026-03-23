@@ -102,6 +102,8 @@ export class GameScene extends Container {
   private upgradeScrollMax = 0;
   private upgradeContainerBaseY = 0;
   private readonly UPGRADE_AREA_H = 620;
+  private upgradeScrollTrack!: Graphics;
+  private upgradeScrollThumb!: Graphics;
 
   // Event log
   private eventLog!: EventLog;
@@ -642,6 +644,7 @@ export class GameScene extends Container {
         dragMoved = true;
         this.upgradeScrollY = Math.max(0, Math.min(this.upgradeScrollMax, scrollAtStart - dy));
         this.upgradeContainer.y = this.upgradeContainerBaseY - this.upgradeScrollY;
+        this.updateScrollbar();
       }
     });
 
@@ -660,6 +663,32 @@ export class GameScene extends Container {
         }
       }
     });
+
+    // Mouse wheel scroll support
+    upgradeOverlay.on('wheel', (e) => {
+      this.upgradeScrollY = Math.max(0, Math.min(this.upgradeScrollMax, this.upgradeScrollY + e.deltaY / this.layout.scale));
+      this.upgradeContainer.y = this.upgradeContainerBaseY - this.upgradeScrollY;
+      this.updateScrollbar();
+    });
+
+    // Scrollbar track (right edge of upgrade area)
+    const scrollbarX = gw - 22;
+    this.upgradeScrollTrack = new Graphics();
+    this.upgradeScrollTrack.rect(0, 0, 8, this.UPGRADE_AREA_H);
+    this.upgradeScrollTrack.fill({ color: 0x2a2a5e });
+    this.upgradeScrollTrack.x = scrollbarX;
+    this.upgradeScrollTrack.y = this.upgradeContainerBaseY;
+    this.upgradeScrollTrack.visible = false;
+    this.gameView.addChild(this.upgradeScrollTrack);
+
+    // Scrollbar thumb
+    this.upgradeScrollThumb = new Graphics();
+    this.upgradeScrollThumb.rect(0, 0, 8, 40);
+    this.upgradeScrollThumb.fill({ color: 0xffd700, alpha: 0.6 });
+    this.upgradeScrollThumb.x = scrollbarX;
+    this.upgradeScrollThumb.y = this.upgradeContainerBaseY;
+    this.upgradeScrollThumb.visible = false;
+    this.gameView.addChild(this.upgradeScrollThumb);
 
     // Event log — fixed position below upgrade area
     this.eventLog = new EventLog(gw - 80, 200);
@@ -724,6 +753,25 @@ export class GameScene extends Container {
     this.upgradeScrollMax = Math.max(0, y - this.UPGRADE_AREA_H);
     this.upgradeScrollY = Math.max(0, Math.min(this.upgradeScrollMax, this.upgradeScrollY));
     this.upgradeContainer.y = this.upgradeContainerBaseY - this.upgradeScrollY;
+    this.updateScrollbar();
+  }
+
+  /** Update scrollbar thumb position and visibility */
+  private updateScrollbar(): void {
+    const hasScroll = this.upgradeScrollMax > 0;
+    this.upgradeScrollTrack.visible = hasScroll;
+    this.upgradeScrollThumb.visible = hasScroll;
+    if (!hasScroll) return;
+
+    const totalContentH = this.upgradeScrollMax + this.UPGRADE_AREA_H;
+    const thumbH = Math.max(30, (this.UPGRADE_AREA_H / totalContentH) * this.UPGRADE_AREA_H);
+    const thumbRange = this.UPGRADE_AREA_H - thumbH;
+    const thumbY = this.upgradeContainerBaseY + (this.upgradeScrollMax > 0 ? (this.upgradeScrollY / this.upgradeScrollMax) * thumbRange : 0);
+
+    this.upgradeScrollThumb.clear();
+    this.upgradeScrollThumb.roundRect(0, 0, 8, thumbH, 4);
+    this.upgradeScrollThumb.fill({ color: 0xffd700, alpha: 0.6 });
+    this.upgradeScrollThumb.y = thumbY;
   }
 
   private buildToggle(labelText: string, color: number, onClick: () => void): Container {
