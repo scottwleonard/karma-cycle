@@ -445,6 +445,7 @@ export class GameScene extends Container {
 
     // === ACTIVITY LOG (right-column sidebar) ===
     this.activityLog = new ActivityLog();
+    this.activityLog.setPlayerName(this.engine.state.playerName);
 
     // === SUGGEST OVERLAY ===
     this.suggestOverlay = new SuggestOverlay(gw, this.loadTime, (issueNumber) => {

@@ -29,11 +29,22 @@ interface OpenPR {
   issueUrl: string;
 }
 
+interface VoteCounts {
+  [prNumber: number]: { count: number; voters: string[] };
+}
+
+const VOTES_TO_MERGE = 3;
+
 export class ActivityLog {
   private container: HTMLDivElement;
   private entriesList: HTMLDivElement;
   private communityPanel: HTMLDivElement;
   private readonly onResize: () => void;
+  private playerName = '';
+
+  setPlayerName(name: string): void {
+    this.playerName = name;
+  }
 
   constructor() {
     this.container = document.createElement('div');
@@ -144,9 +155,14 @@ export class ActivityLog {
     this.communityPanel.appendChild(loading);
 
     try {
-      const res = await fetch('/.netlify/functions/closed-issues');
-      if (!res.ok) throw new Error('fetch failed');
-      const prs = (await res.json()) as OpenPR[];
+      const [prsRes, votesRes] = await Promise.all([
+        fetch('/.netlify/functions/closed-issues'),
+        fetch('/.netlify/functions/vote'),
+      ]);
+
+      if (!prsRes.ok) throw new Error('fetch failed');
+      const prs = (await prsRes.json()) as OpenPR[];
+      const votes: VoteCounts = votesRes.ok ? await votesRes.json() : {};
 
       this.communityPanel.innerHTML = '';
 
@@ -166,11 +182,12 @@ export class ActivityLog {
         border-bottom: 1px solid rgba(255, 215, 0, 0.08);
         flex-shrink: 0;
       `;
-      header.textContent = 'Proposed changes — try & vote!';
+      header.textContent = `Proposed changes — ${VOTES_TO_MERGE} votes to ship!`;
       this.communityPanel.appendChild(header);
 
       for (const pr of prs) {
-        this.communityPanel.appendChild(this.makeCommunityEntry(pr));
+        const prVotes = votes[pr.number] ?? { count: 0, voters: [] };
+        this.communityPanel.appendChild(this.makeCommunityEntry(pr, prVotes));
       }
 
     } catch {
@@ -182,7 +199,7 @@ export class ActivityLog {
     }
   }
 
-  private makeCommunityEntry(issue: OpenPR): HTMLDivElement {
+  private makeCommunityEntry(issue: OpenPR, votes: { count: number; voters: string[] }): HTMLDivElement {
     const entry = document.createElement('div');
     entry.style.cssText = `
       padding: 6px 8px;
@@ -196,15 +213,82 @@ export class ActivityLog {
     titleEl.textContent = `#${issue.number} ${issue.title}`;
     entry.appendChild(titleEl);
 
+    // Vote progress bar
+    const progressWrap = document.createElement('div');
+    progressWrap.style.cssText = `
+      background: rgba(255, 255, 255, 0.06); border-radius: 4px;
+      height: 14px; margin-bottom: 6px; position: relative; overflow: hidden;
+    `;
+    const progressFill = document.createElement('div');
+    const pct = Math.min(100, (votes.count / VOTES_TO_MERGE) * 100);
+    progressFill.style.cssText = `
+      background: rgba(255, 215, 0, 0.4); height: 100%; border-radius: 4px;
+      width: ${pct}%; transition: width 0.3s;
+    `;
+    const progressText = document.createElement('span');
+    progressText.style.cssText = `
+      position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 9px; color: #ffd700;
+    `;
+    progressText.textContent = `${votes.count}/${VOTES_TO_MERGE} votes`;
+    progressWrap.appendChild(progressFill);
+    progressWrap.appendChild(progressText);
+    entry.appendChild(progressWrap);
+
     const links = document.createElement('div');
-    links.style.cssText = 'display: flex; gap: 6px; flex-wrap: wrap;';
+    links.style.cssText = 'display: flex; gap: 6px; flex-wrap: wrap; align-items: center;';
 
     const preview = this.makeLink('▶ Preview', issue.previewUrl, '#88ccff');
     links.appendChild(preview);
 
-    const vote = this.makeLink('👍 Vote', `${issue.issueUrl}#issue-comment-box`, '#ffd700');
-    links.appendChild(vote);
+    const hasVoted = votes.voters.some(
+      (v) => v.toLowerCase() === this.playerName.toLowerCase(),
+    );
 
+    const voteBtn = document.createElement('button');
+    voteBtn.style.cssText = `
+      background: ${hasVoted ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 215, 0, 0.08)'};
+      border: 1px solid rgba(255, 215, 0, ${hasVoted ? '0.5' : '0.3'});
+      border-radius: 4px; padding: 2px 8px; cursor: ${hasVoted ? 'default' : 'pointer'};
+      color: #ffd700; font-family: monospace; font-size: 10px;
+      opacity: ${hasVoted ? '0.6' : '1'};
+    `;
+    voteBtn.textContent = hasVoted ? '✓ Voted' : '👍 Vote';
+
+    if (!hasVoted) {
+      voteBtn.addEventListener('click', async () => {
+        voteBtn.disabled = true;
+        voteBtn.textContent = '...';
+        try {
+          const res = await fetch('/.netlify/functions/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pr_number: issue.number, player_name: this.playerName }),
+          });
+          const result = (await res.json()) as { success: boolean; totalVotes?: number; merged?: boolean };
+          if (result.success) {
+            voteBtn.textContent = result.merged ? '🎉 Merged!' : '✓ Voted';
+            voteBtn.style.opacity = '0.6';
+            voteBtn.style.cursor = 'default';
+            // Update progress bar
+            const newCount = result.totalVotes ?? votes.count + 1;
+            const newPct = Math.min(100, (newCount / VOTES_TO_MERGE) * 100);
+            progressFill.style.width = `${newPct}%`;
+            progressText.textContent = result.merged
+              ? 'Approved!'
+              : `${newCount}/${VOTES_TO_MERGE} votes`;
+          } else {
+            voteBtn.textContent = '✓ Voted';
+            voteBtn.style.opacity = '0.6';
+          }
+        } catch {
+          voteBtn.textContent = '👍 Vote';
+          voteBtn.disabled = false;
+        }
+      });
+    }
+
+    links.appendChild(voteBtn);
     entry.appendChild(links);
     return entry;
   }
