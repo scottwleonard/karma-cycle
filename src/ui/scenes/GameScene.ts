@@ -135,6 +135,7 @@ export class GameScene extends Container {
 
   // Audio
   private audioManager: AudioManager;
+  private muteButton!: Graphics;
 
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
@@ -471,6 +472,63 @@ export class GameScene extends Container {
     resetBtn.x = gw - 350;
     resetBtn.y = 25;
     this.addChild(resetBtn);
+
+    // === MUTE BUTTON ===
+    this.muteButton = this.buildMuteButton();
+    this.muteButton.x = gw - 500;
+    this.muteButton.y = 25;
+    this.addChild(this.muteButton);
+  }
+
+  private buildMuteButton(): Graphics {
+    const btn = new Graphics();
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    this.drawMuteButton(btn);
+    btn.on('pointerdown', () => {
+      this.audioManager.setMuted(!this.audioManager.isMuted);
+      this.drawMuteButton(btn);
+    });
+    return btn;
+  }
+
+  private drawMuteButton(btn: Graphics): void {
+    const muted = this.audioManager.isMuted;
+    const w = 50;
+    const h = 50;
+    btn.clear();
+    // Background pill
+    btn.roundRect(0, 0, w, h, 10);
+    btn.fill({ color: muted ? 0x553333 : 0x335533 });
+    btn.stroke({ color: muted ? 0xaa4444 : 0x44aa44, width: 2 });
+    // Speaker icon
+    const cx = w / 2;
+    const cy = h / 2;
+    const gold = muted ? 0xaa6666 : 0xffd700;
+    // Speaker body
+    btn.moveTo(cx - 12, cy - 6);
+    btn.lineTo(cx - 5, cy - 6);
+    btn.lineTo(cx + 3, cy - 13);
+    btn.lineTo(cx + 3, cy + 13);
+    btn.lineTo(cx - 5, cy + 6);
+    btn.lineTo(cx - 12, cy + 6);
+    btn.closePath();
+    btn.fill({ color: gold });
+    if (!muted) {
+      // Sound waves
+      btn.arc(cx + 3, cy, 7, -0.6, 0.6);
+      btn.stroke({ color: gold, width: 2 });
+      btn.arc(cx + 3, cy, 12, -0.8, 0.8);
+      btn.stroke({ color: gold, width: 2 });
+    } else {
+      // X mark
+      btn.moveTo(cx + 7, cy - 7);
+      btn.lineTo(cx + 14, cy + 7);
+      btn.stroke({ color: 0xff4444, width: 2.5 });
+      btn.moveTo(cx + 14, cy - 7);
+      btn.lineTo(cx + 7, cy + 7);
+      btn.stroke({ color: 0xff4444, width: 2.5 });
+    }
   }
 
   private buildGameView(gw: number): void {

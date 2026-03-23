@@ -51,6 +51,7 @@ async function main() {
   // Create layout, audio, and scene
   const layout = calculateLayout(app.screen.width, app.screen.height);
   const audioManager = new AudioManager();
+  audioManager.loadMutePreference();
   const scene = new GameScene(engine, layout, audioManager);
   app.stage.addChild(scene);
 
