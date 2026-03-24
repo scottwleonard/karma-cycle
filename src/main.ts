@@ -97,8 +97,10 @@ async function main() {
     leaderboard.updateLayout(newLayout.offsetX);
   });
 
-  // Auto-reload on new version deploy
-  const versionChecker = new VersionChecker(__BUILD_HASH__);
+  // Auto-reload on new version deploy (save first)
+  const versionChecker = new VersionChecker(__BUILD_HASH__, () => {
+    saveManager.save(engine.state);
+  });
   versionChecker.start();
 }
 

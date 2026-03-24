@@ -3,9 +3,11 @@ const POLL_INTERVAL = 60_000;
 export class VersionChecker {
   private currentHash: string;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private onBeforeReload?: () => void;
 
-  constructor(currentHash: string) {
+  constructor(currentHash: string, onBeforeReload?: () => void) {
     this.currentHash = currentHash;
+    this.onBeforeReload = onBeforeReload;
   }
 
   start(): void {
@@ -18,7 +20,8 @@ export class VersionChecker {
       if (!res.ok) return;
       const data = (await res.json()) as { hash: string };
       if (data.hash && data.hash !== this.currentHash) {
-        // New version deployed — reload after saving
+        // New version deployed — save state then reload
+        this.onBeforeReload?.();
         window.location.reload();
       }
     } catch {

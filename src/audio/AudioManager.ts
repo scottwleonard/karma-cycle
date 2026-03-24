@@ -92,6 +92,11 @@ export class AudioManager {
     // Suspend/resume on tab visibility
     document.addEventListener('visibilitychange', this.handleVisibility);
 
+    // Respect mute state on init
+    if (this.muted && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+
     this.initialized = true;
   }
 
@@ -180,6 +185,10 @@ export class AudioManager {
       const stored = localStorage.getItem(MUTE_KEY);
       if (stored === '1') {
         this.muted = true;
+        // Suspend audio context if already initialized
+        if (this.ctx && this.ctx.state === 'running') {
+          this.ctx.suspend().catch(() => {});
+        }
       }
     } catch {
       // Ignore storage errors
