@@ -6,6 +6,7 @@ interface LeaderboardEntry {
   karma: number;
   lives: number;
   tier: number;
+  avatar?: string | null;
 }
 
 export class LeaderboardPanel {
@@ -78,12 +79,12 @@ export class LeaderboardPanel {
   }
 
   /** Submit player score and refresh the display */
-  async submitScore(karma: number, lives: number, tier: number): Promise<void> {
+  async submitScore(karma: number, lives: number, tier: number, avatar?: string | null): Promise<void> {
     try {
       await fetch('/.netlify/functions/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: this.playerName, karma, lives, tier }),
+        body: JSON.stringify({ name: this.playerName, karma, lives, tier, ...(avatar && { avatar }) }),
       });
       this.fetch();
     } catch {
@@ -135,17 +136,33 @@ export class LeaderboardPanel {
     rank.textContent = rankText;
     rank.style.cssText = `
       color: ${i < 3 ? '#ffd700' : '#666'};
-      font-size: 13px; min-width: 24px; text-align: right;
+      font-size: 12px; min-width: 20px; text-align: right;
     `;
 
-    const tierIcon = document.createElement('span');
-    tierIcon.textContent = TIER_NAMES[entry.tier] || '';
-    tierIcon.style.cssText = `font-size: 14px; min-width: 16px;`;
+    // Avatar circle
+    const avatarEl = document.createElement('div');
+    avatarEl.style.cssText = `
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: #0a0a2e; border: 1px solid rgba(255, 215, 0, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; font-size: 12px; color: #ffd700; font-weight: bold;
+    `;
+    if (entry.avatar) {
+      const img = document.createElement('img');
+      img.src = entry.avatar;
+      img.style.cssText = `width: 100%; height: 100%; object-fit: cover;`;
+      avatarEl.appendChild(img);
+    } else {
+      avatarEl.textContent = (entry.name[0] ?? '?').toUpperCase();
+    }
 
     const info = document.createElement('div');
     info.style.cssText = `flex: 1; min-width: 0;`;
 
-    const name = document.createElement('div');
+    const nameRow = document.createElement('div');
+    nameRow.style.cssText = `display: flex; align-items: center; gap: 4px;`;
+
+    const name = document.createElement('span');
     name.textContent = entry.name;
     name.style.cssText = `
       font-size: 13px; font-weight: ${isPlayer ? 'bold' : 'normal'};
@@ -153,14 +170,21 @@ export class LeaderboardPanel {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     `;
 
+    const tierIcon = document.createElement('span');
+    tierIcon.textContent = TIER_NAMES[entry.tier] || '';
+    tierIcon.style.cssText = `font-size: 12px;`;
+
+    nameRow.appendChild(name);
+    if (TIER_NAMES[entry.tier]) nameRow.appendChild(tierIcon);
+
     const karma = document.createElement('div');
     karma.textContent = `${formatKarma(entry.karma)} karma · ${entry.lives} lives`;
     karma.style.cssText = `font-size: 11px; color: #888; margin-top: 2px;`;
 
-    info.appendChild(name);
+    info.appendChild(nameRow);
     info.appendChild(karma);
     row.appendChild(rank);
-    row.appendChild(tierIcon);
+    row.appendChild(avatarEl);
     row.appendChild(info);
     return row;
   }

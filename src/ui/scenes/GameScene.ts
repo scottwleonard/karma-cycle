@@ -218,6 +218,7 @@ export class GameScene extends Container {
         return muted;
       },
       onChangeName: () => this.promptNameChange(),
+      onAvatarChange: () => { /* Avatar saved to localStorage, picked up on next score submit */ },
       isMuted: () => this.audioManager.isMuted,
     });
 

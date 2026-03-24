@@ -9,6 +9,7 @@ import { AudioManager } from './audio/AudioManager';
 import { showNamePrompt } from './ui/components/NamePrompt';
 import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
 import { VersionChecker } from './ui/VersionChecker';
+import { loadAvatarLocal } from './ui/avatarUtils';
 
 async function main() {
   const app = new Application();
@@ -66,7 +67,8 @@ async function main() {
   // Submit score periodically — uses banked karma (state.karma)
   const submitScore = () => {
     const s = engine.state;
-    leaderboard.submitScore(Math.floor(s.karma), s.lifeNumber, s.enlightenmentTier);
+    const avatar = loadAvatarLocal();
+    leaderboard.submitScore(Math.floor(s.karma), s.lifeNumber, s.enlightenmentTier, avatar);
   };
 
   // Game loop
