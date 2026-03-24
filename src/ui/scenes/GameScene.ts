@@ -104,7 +104,7 @@ export class GameScene extends Container {
   private upgradeScrollY = 0;
   private upgradeScrollMax = 0;
   private upgradeContainerBaseY = 0;
-  private readonly UPGRADE_AREA_H = 620;
+  private readonly UPGRADE_AREA_H = 480;
   private upgradeScrollTrack!: Graphics;
   private upgradeScrollThumb!: Graphics;
 
@@ -204,7 +204,44 @@ export class GameScene extends Container {
     this.bgRect.fill({ color: CONFIG.display.bgColor });
     this.addChild(this.bgRect);
 
-    // === HEADER ===
+    // === TOOLBAR (top row — buttons above game content) ===
+    const toolbarY = 12;
+    const headerGap = 8;
+    let headerX = gw - MARGIN;
+
+    const suggestBtn = new ActionButton('Suggest', 160, 44, 0x998833, () => {
+      this.suggestOverlay.show(this.layout);
+    });
+    headerX -= 160;
+    suggestBtn.x = headerX;
+    suggestBtn.y = toolbarY;
+    this.addChild(suggestBtn);
+
+    const resetBtn = new ActionButton('Reset', 110, 44, 0xaa3333, () => {
+      this.resetOverlay.visible = true;
+    });
+    headerX -= 110 + headerGap;
+    resetBtn.x = headerX;
+    resetBtn.y = toolbarY;
+    this.addChild(resetBtn);
+
+    const saveLoadBtn = new ActionButton('Save/Load', 160, 44, 0x224466, () => {
+      this.saveExportImportOverlay.show();
+    });
+    headerX -= 160 + headerGap;
+    saveLoadBtn.x = headerX;
+    saveLoadBtn.y = toolbarY;
+    this.addChild(saveLoadBtn);
+
+    this.muteButton = this.buildMuteButton();
+    headerX -= 44 + headerGap;
+    this.muteButton.x = headerX;
+    this.muteButton.y = toolbarY;
+    this.addChild(this.muteButton);
+
+    // === HEADER (Life info — below toolbar) ===
+    const contentStartY = toolbarY + 56;
+
     this.headerText = new Text({
       text: 'Life #1  |  0:00',
       style: {
@@ -214,7 +251,7 @@ export class GameScene extends Container {
       },
     });
     this.headerText.x = MARGIN;
-    this.headerText.y = 30;
+    this.headerText.y = contentStartY;
     this.addChild(this.headerText);
 
     // === NIRVANA CHALLENGE TIMER ===
@@ -229,12 +266,12 @@ export class GameScene extends Container {
     });
     this.nirvanaTimerText.anchor.set(0.5, 0);
     this.nirvanaTimerText.x = gw / 2;
-    this.nirvanaTimerText.y = 70;
+    this.nirvanaTimerText.y = contentStartY + 44;
     this.nirvanaTimerText.visible = false;
     this.addChild(this.nirvanaTimerText);
 
     // === MANDALA AREA ===
-    const mandalaY = 250;
+    const mandalaY = contentStartY + 180;
     this.mandala = new Mandala(180);
     this.mandala.x = gw / 2;
     this.mandala.y = mandalaY;
@@ -288,7 +325,7 @@ export class GameScene extends Container {
 
     // === TAB CONTENT AREAS ===
     this.tabContainer = new Container();
-    this.tabContainer.y = mandalaY + 240;
+    this.tabContainer.y = mandalaY + 220;
     this.addChild(this.tabContainer);
 
     this.buildGameView(gw);
@@ -476,42 +513,6 @@ export class GameScene extends Container {
     this.saveExportImportOverlay = new SaveExportImportOverlay(gw);
     this.saveExportImportOverlay.setGetState(() => this.engine.state);
     this.addChild(this.saveExportImportOverlay);
-
-    // Header buttons (top-right, evenly spaced)
-    const headerY = 25;
-    const headerGap = 8;
-    let headerX = gw - MARGIN;
-
-    const suggestBtn = new ActionButton('Suggest', 160, 50, 0x998833, () => {
-      this.suggestOverlay.show(this.layout);
-    });
-    headerX -= 160;
-    suggestBtn.x = headerX;
-    suggestBtn.y = headerY;
-    this.addChild(suggestBtn);
-
-    const resetBtn = new ActionButton('Reset', 120, 50, 0xaa3333, () => {
-      this.resetOverlay.visible = true;
-    });
-    headerX -= 120 + headerGap;
-    resetBtn.x = headerX;
-    resetBtn.y = headerY;
-    this.addChild(resetBtn);
-
-    const saveLoadBtn = new ActionButton('Save/Load', 170, 50, 0x224466, () => {
-      this.saveExportImportOverlay.show();
-    });
-    headerX -= 170 + headerGap;
-    saveLoadBtn.x = headerX;
-    saveLoadBtn.y = headerY;
-    this.addChild(saveLoadBtn);
-
-    // === MUTE BUTTON ===
-    this.muteButton = this.buildMuteButton();
-    headerX -= 50 + headerGap;
-    this.muteButton.x = headerX;
-    this.muteButton.y = headerY;
-    this.addChild(this.muteButton);
   }
 
   private buildMuteButton(): Graphics {
@@ -808,7 +809,7 @@ export class GameScene extends Container {
     // Event log — fixed position below upgrade area, aligned to content area
     this.eventLog = new EventLog(contentW, 200);
     this.eventLog.x = GM;
-    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 20;
+    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 8;
     this.gameView.addChild(this.eventLog);
   }
 
