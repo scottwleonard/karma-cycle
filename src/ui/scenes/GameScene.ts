@@ -18,6 +18,7 @@ import { SaveExportImportOverlay } from '../components/SaveExportImportOverlay';
 import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
 import { showNamePrompt } from '../components/NamePrompt';
+import { ProfileMenu } from '../components/ProfileMenu';
 import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
@@ -138,7 +139,7 @@ export class GameScene extends Container {
 
   // Audio
   private audioManager: AudioManager;
-  private muteButton!: Graphics;
+  private profileMenu!: ProfileMenu;
 
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
@@ -206,51 +207,22 @@ export class GameScene extends Container {
     this.bgRect.fill({ color: CONFIG.display.bgColor });
     this.addChild(this.bgRect);
 
-    // === TOOLBAR (top row — buttons above game content) ===
-    const toolbarY = 12;
-    const headerGap = 8;
-    let headerX = gw - MARGIN;
-
-    const suggestBtn = new ActionButton('Suggest', 160, 44, 0x998833, () => {
-      this.suggestOverlay.show(this.layout);
+    // === PROFILE MENU (HTML dropdown, top-right) ===
+    this.profileMenu = new ProfileMenu(this.engine.state.playerName, {
+      onSuggest: () => this.suggestOverlay.show(this.layout),
+      onReset: () => { this.resetOverlay.visible = true; },
+      onSaveLoad: () => this.saveExportImportOverlay.show(),
+      onToggleMute: () => {
+        const muted = !this.audioManager.isMuted;
+        this.audioManager.setMuted(muted);
+        return muted;
+      },
+      onChangeName: () => this.promptNameChange(),
+      isMuted: () => this.audioManager.isMuted,
     });
-    headerX -= 160;
-    suggestBtn.x = headerX;
-    suggestBtn.y = toolbarY;
-    this.addChild(suggestBtn);
 
-    const resetBtn = new ActionButton('Reset', 110, 44, 0xaa3333, () => {
-      this.resetOverlay.visible = true;
-    });
-    headerX -= 110 + headerGap;
-    resetBtn.x = headerX;
-    resetBtn.y = toolbarY;
-    this.addChild(resetBtn);
-
-    const saveLoadBtn = new ActionButton('Save/Load', 160, 44, 0x224466, () => {
-      this.saveExportImportOverlay.show();
-    });
-    headerX -= 160 + headerGap;
-    saveLoadBtn.x = headerX;
-    saveLoadBtn.y = toolbarY;
-    this.addChild(saveLoadBtn);
-
-    this.muteButton = this.buildMuteButton();
-    headerX -= 44 + headerGap;
-    this.muteButton.x = headerX;
-    this.muteButton.y = toolbarY;
-    this.addChild(this.muteButton);
-
-    // Name button (left side of toolbar)
-    const nameBtn = new ActionButton(this.engine.state.playerName || 'Name', 200, 44, 0x335566, () => {
-      this.promptNameChange(nameBtn);
-    });
-    nameBtn.x = MARGIN;
-    nameBtn.y = toolbarY;
-    this.addChild(nameBtn);
-
-    // === HEADER (Life info — below toolbar) ===
-    const contentStartY = toolbarY + 44 + 64;
+    // === HEADER (Life info — below top area) ===
+    const contentStartY = 64;
 
     this.headerText = new Text({
       text: 'Life #1',
@@ -538,56 +510,7 @@ export class GameScene extends Container {
     this.addChild(this.saveExportImportOverlay);
   }
 
-  private buildMuteButton(): Graphics {
-    const btn = new Graphics();
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    this.drawMuteButton(btn);
-    btn.on('pointerdown', () => {
-      this.audioManager.setMuted(!this.audioManager.isMuted);
-      this.drawMuteButton(btn);
-    });
-    return btn;
-  }
 
-  private drawMuteButton(btn: Graphics): void {
-    const muted = this.audioManager.isMuted;
-    const w = 50;
-    const h = 50;
-    btn.clear();
-    // Background pill
-    btn.roundRect(0, 0, w, h, 10);
-    btn.fill({ color: muted ? 0x553333 : 0x335533 });
-    btn.stroke({ color: muted ? 0xaa4444 : 0x44aa44, width: 2 });
-    // Speaker icon
-    const cx = w / 2;
-    const cy = h / 2;
-    const gold = muted ? 0xaa6666 : 0xffd700;
-    // Speaker body
-    btn.moveTo(cx - 12, cy - 6);
-    btn.lineTo(cx - 5, cy - 6);
-    btn.lineTo(cx + 3, cy - 13);
-    btn.lineTo(cx + 3, cy + 13);
-    btn.lineTo(cx - 5, cy + 6);
-    btn.lineTo(cx - 12, cy + 6);
-    btn.closePath();
-    btn.fill({ color: gold });
-    if (!muted) {
-      // Sound waves
-      btn.arc(cx + 3, cy, 7, -0.6, 0.6);
-      btn.stroke({ color: gold, width: 2 });
-      btn.arc(cx + 3, cy, 12, -0.8, 0.8);
-      btn.stroke({ color: gold, width: 2 });
-    } else {
-      // X mark
-      btn.moveTo(cx + 7, cy - 7);
-      btn.lineTo(cx + 14, cy + 7);
-      btn.stroke({ color: 0xff4444, width: 2.5 });
-      btn.moveTo(cx + 14, cy - 7);
-      btn.lineTo(cx + 7, cy + 7);
-      btn.stroke({ color: 0xff4444, width: 2.5 });
-    }
-  }
 
   private buildGameView(gw: number): void {
     this.gameView = new Container();
@@ -1183,7 +1106,7 @@ export class GameScene extends Container {
     this.victoryOverlay.visible = true;
   }
 
-  private async promptNameChange(nameBtn: ActionButton): Promise<void> {
+  private async promptNameChange(): Promise<void> {
     const currentName = this.engine.state.playerName;
     const newName = await showNamePrompt({
       title: 'Change Name',
@@ -1193,7 +1116,7 @@ export class GameScene extends Container {
     });
     if (newName && newName !== currentName) {
       this.engine.state.playerName = newName;
-      nameBtn.setLabel(newName);
+      this.profileMenu.setPlayerName(newName);
       this.activityLog.setPlayerName(newName);
     }
   }
