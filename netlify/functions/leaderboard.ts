@@ -23,10 +23,23 @@ const handler: Handler = async (event) => {
 
   const instance = getInstance(event);
 
-  // GET — fetch leaderboard for this instance
+  // GET — fetch leaderboard, or check name availability with ?check=name
   if (event.httpMethod === 'GET') {
     try {
       const supabase = getSupabase();
+
+      // Name availability check
+      const checkName = event.queryStringParameters?.check;
+      if (checkName) {
+        const { data } = await supabase
+          .from('leaderboard')
+          .select('name')
+          .eq('instance', instance)
+          .ilike('name', checkName)
+          .limit(1);
+        const taken = (data ?? []).length > 0;
+        return { statusCode: 200, headers, body: JSON.stringify({ available: !taken }) };
+      }
       const [activeRes, allTimeRes] = await Promise.all([
         supabase
           .from('leaderboard')

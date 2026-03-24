@@ -144,6 +144,10 @@ export class ActionButton extends Container {
     }
   }
 
+  setLabel(text: string): void {
+    this.labelText.text = text;
+  }
+
   setCost(text: string): void {
     this.costText.text = text;
   }

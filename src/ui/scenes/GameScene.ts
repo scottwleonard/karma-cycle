@@ -17,6 +17,7 @@ import { TutorialOverlay } from '../components/TutorialOverlay';
 import { SaveExportImportOverlay } from '../components/SaveExportImportOverlay';
 import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
+import { showNamePrompt } from '../components/NamePrompt';
 import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
@@ -239,6 +240,14 @@ export class GameScene extends Container {
     this.muteButton.x = headerX;
     this.muteButton.y = toolbarY;
     this.addChild(this.muteButton);
+
+    // Name button (left side of toolbar)
+    const nameBtn = new ActionButton(this.engine.state.playerName || 'Name', 200, 44, 0x335566, () => {
+      this.promptNameChange(nameBtn);
+    });
+    nameBtn.x = MARGIN;
+    nameBtn.y = toolbarY;
+    this.addChild(nameBtn);
 
     // === HEADER (Life info — below toolbar) ===
     const contentStartY = toolbarY + 44 + 64;
@@ -1172,6 +1181,21 @@ export class GameScene extends Container {
     this.victoryOverlay.addChild(continueBtn);
 
     this.victoryOverlay.visible = true;
+  }
+
+  private async promptNameChange(nameBtn: ActionButton): Promise<void> {
+    const currentName = this.engine.state.playerName;
+    const newName = await showNamePrompt({
+      title: 'Change Name',
+      subtitle: 'Choose a new name (must be unique)',
+      buttonText: 'Change',
+      currentName,
+    });
+    if (newName && newName !== currentName) {
+      this.engine.state.playerName = newName;
+      nameBtn.setLabel(newName);
+      this.activityLog.setPlayerName(newName);
+    }
   }
 
   private applyEnlightenmentTheme(tier: number): void {

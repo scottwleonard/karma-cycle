@@ -34,7 +34,8 @@ async function main() {
 
   // Prompt for player name if not set
   if (!state.playerName) {
-    state.playerName = await showNamePrompt();
+    const name = await showNamePrompt();
+    state.playerName = name ?? 'Anonymous';
     saveManager.save(state);
   }
 
