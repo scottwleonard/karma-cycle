@@ -39,7 +39,9 @@ const CONTENT_W = GW - GM_SCENE * 2; // 1000
 const BTN_GAP = 12;
 const BTN_W = (CONTENT_W - BTN_GAP * 2) / 3; // ≈ 325
 const BTN_H = 80;
-const UPGRADE_ROWS_Y = TAB_CONTAINER_Y + 392; // first upgrade row in screen coords
+// Full upgrade section: from header through scrollable area
+const UPGRADE_HEADER_Y = TAB_CONTAINER_Y + 360; // upgradeHeader in screen coords
+const UPGRADE_SECTION_H = 512; // header + gap + UPGRADE_AREA_H (32 + 480)
 
 const STEPS: TutorialStep[] = [
   {
@@ -81,8 +83,8 @@ const STEPS: TutorialStep[] = [
       'karma gain, reduce costs, and unlock\n' +
       'new abilities.\n\n' +
       'Good luck on your journey!',
-    highlight: { x: GM_SCENE, y: UPGRADE_ROWS_Y, w: CONTENT_W, h: 140 },
-    textY: UPGRADE_ROWS_Y - 280,
+    highlight: { x: GM_SCENE, y: UPGRADE_HEADER_Y, w: CONTENT_W, h: UPGRADE_SECTION_H },
+    textY: UPGRADE_HEADER_Y - 300,
   },
 ];
 
