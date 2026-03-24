@@ -60,6 +60,7 @@ export class GameScene extends Container {
 
   // Header
   private headerText!: Text;
+  private headerRightText!: Text;
 
   // Mandala area
   private mandala!: Mandala;
@@ -243,7 +244,7 @@ export class GameScene extends Container {
     const contentStartY = toolbarY + 44 + 64;
 
     this.headerText = new Text({
-      text: 'Life #1  |  0:00',
+      text: 'Life #1',
       style: {
         fontFamily: 'monospace',
         fontSize: 36,
@@ -253,6 +254,19 @@ export class GameScene extends Container {
     this.headerText.x = MARGIN;
     this.headerText.y = contentStartY;
     this.addChild(this.headerText);
+
+    this.headerRightText = new Text({
+      text: '0:00',
+      style: {
+        fontFamily: 'monospace',
+        fontSize: 36,
+        fill: 0xffffff,
+      },
+    });
+    this.headerRightText.anchor.set(1, 0);
+    this.headerRightText.x = gw - MARGIN;
+    this.headerRightText.y = contentStartY;
+    this.addChild(this.headerRightText);
 
     // === NIRVANA CHALLENGE TIMER ===
     this.nirvanaTimerText = new Text({
@@ -1188,12 +1202,13 @@ export class GameScene extends Container {
     // Audio — responds to game state intensity
     this.audioManager.update(state, netKarmaRate);
 
-    // Header
-    let headerStr = `Life #${state.lifeNumber}  |  ${formatDuration(state.lifeTimeElapsed)}  |  x${state.karmaMultiplier.toFixed(2)}`;
+    // Header — life number on left, time/multiplier on right
+    this.headerText.text = `Life #${state.lifeNumber}`;
+    let rightStr = `${formatDuration(state.lifeTimeElapsed)}  |  x${state.karmaMultiplier.toFixed(2)}`;
     if (state.nirvanaChallengeActive) {
-      headerStr += '  |  TRIAL';
+      rightStr += '  |  TRIAL';
     }
-    this.headerText.text = headerStr;
+    this.headerRightText.text = rightStr;
 
     // Nirvana challenge timer
     if (state.nirvanaChallengeActive) {
