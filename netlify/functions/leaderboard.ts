@@ -49,7 +49,7 @@ const handler: Handler = async (event) => {
           .limit(MAX_ENTRIES),
         supabase
           .from('leaderboard')
-          .select('name, peak_karma, tier')
+          .select('name, peak_karma, lives, tier')
           .eq('instance', instance)
           .order('peak_karma', { ascending: false })
           .limit(3),
@@ -60,7 +60,7 @@ const handler: Handler = async (event) => {
         statusCode: 200, headers,
         body: JSON.stringify({
           active: activeRes.data ?? [],
-          allTime: (allTimeRes.data ?? []).map((r) => ({ name: r.name, karma: r.peak_karma, tier: r.tier })),
+          allTime: (allTimeRes.data ?? []).map((r) => ({ name: r.name, karma: r.peak_karma, lives: r.lives, tier: r.tier })),
         }),
       };
     } catch (e) {
