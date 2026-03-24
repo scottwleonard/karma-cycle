@@ -41,6 +41,8 @@ export interface GameState {
 
   autoFeedEnabled: boolean;
   autoRepairEnabled: boolean;
+  autoFeedThreshold: number;
+  autoRepairThreshold: number;
 
   // Karma bank (post-upgrade acceleration)
   bankedKarma: number;

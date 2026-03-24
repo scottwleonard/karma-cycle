@@ -36,7 +36,7 @@ export class GameEngine {
     if (
       this.state.autoFeedEnabled &&
       getSoulUpgradeLevel(this.state, 'auto_feed') > 0 &&
-      this.state.needs.hunger < 50
+      this.state.needs.hunger < this.state.autoFeedThreshold
     ) {
       const cost = getFeedCost(this.state);
       if (this.state.wealth >= cost) {
@@ -52,7 +52,7 @@ export class GameEngine {
     if (
       this.state.autoRepairEnabled &&
       getSoulUpgradeLevel(this.state, 'auto_repair') > 0 &&
-      this.state.needs.shelter < 50
+      this.state.needs.shelter < this.state.autoRepairThreshold
     ) {
       const cost = getRepairCost(this.state);
       if (this.state.wealth >= cost) {
