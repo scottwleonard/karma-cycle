@@ -53,12 +53,13 @@ export class ActivityLog {
   private communityPanel: HTMLDivElement;
   private readonly onResize: () => void;
   private playerName = '';
+  private versionBar: HTMLDivElement;
 
   setPlayerName(name: string): void {
     this.playerName = name;
   }
 
-  constructor() {
+  constructor(buildHash?: string) {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed;
@@ -72,6 +73,20 @@ export class ActivityLog {
       z-index: 100;
       overflow: hidden;
     `;
+
+    // Version bar
+    this.versionBar = document.createElement('div');
+    this.versionBar.style.cssText = `
+      padding: 4px 8px;
+      font-size: 9px;
+      color: rgba(255, 215, 0, 0.3);
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.08);
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+    `;
+    this.versionBar.textContent = buildHash ? `v${buildHash}` : '';
+    this.container.appendChild(this.versionBar);
 
     // Tab bar
     const tabBar = document.createElement('div');

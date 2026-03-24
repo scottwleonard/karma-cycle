@@ -8,6 +8,7 @@ import { GameScene } from './ui/scenes/GameScene';
 import { AudioManager } from './audio/AudioManager';
 import { showNamePrompt } from './ui/components/NamePrompt';
 import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
+import { VersionChecker } from './ui/VersionChecker';
 
 async function main() {
   const app = new Application();
@@ -95,6 +96,10 @@ async function main() {
     scene.scale.set(newLayout.scale);
     leaderboard.updateLayout(newLayout.offsetX);
   });
+
+  // Auto-reload on new version deploy
+  const versionChecker = new VersionChecker(__BUILD_HASH__);
+  versionChecker.start();
 }
 
 main().catch(console.error);

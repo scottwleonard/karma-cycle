@@ -496,7 +496,7 @@ export class GameScene extends Container {
     this.suggestionTracker = new SuggestionTracker(this.toastManager);
 
     // === ACTIVITY LOG (right-column sidebar) ===
-    this.activityLog = new ActivityLog();
+    this.activityLog = new ActivityLog(__BUILD_HASH__);
     this.activityLog.setPlayerName(this.engine.state.playerName);
 
     // === SUGGEST OVERLAY ===
