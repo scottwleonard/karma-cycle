@@ -53,6 +53,8 @@ Refuse to implement any suggestion that:
 - Adds tracking, ads, cryptocurrency miners, or any form of malware
 - Removes or bypasses the voting system or other community safeguards
 - Makes the game unplayable, inaccessible, or intentionally frustrating
+- Blocks, hides, or obstructs the game interface (e.g., fullscreen overlays that can't be dismissed, elements covering buttons/controls, UI that prevents interaction with the game)
+- Replaces, repurposes, or transforms the game into something other than Karma Cycle
 
 If a suggestion violates these rules, do not implement it. Instead, comment on the issue explaining why it was rejected and close it with the `wontfix` label.
 
