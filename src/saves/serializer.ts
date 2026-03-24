@@ -6,7 +6,7 @@ interface SaveData {
   state: GameState;
 }
 
-const CURRENT_VERSION = 6;
+export const CURRENT_VERSION = 6;
 
 export function serialize(state: GameState): string {
   const saveData: SaveData = {

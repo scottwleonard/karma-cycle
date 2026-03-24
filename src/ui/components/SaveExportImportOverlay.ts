@@ -1,7 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { CONFIG } from '../../config';
 import { ActionButton } from './ActionButton';
-import { serialize, deserialize } from '../../saves/serializer';
+import { serialize, deserialize, CURRENT_VERSION } from '../../saves/serializer';
 import { saveToLocal } from '../../saves/localStorage';
 import type { GameState } from '../../state/GameState';
 
@@ -176,6 +176,22 @@ export class SaveExportImportOverlay extends Container {
         const text = e.target?.result;
         if (typeof text !== 'string') {
           this.setStatus('Failed to read file.', 0xff6644);
+          return;
+        }
+        // Check version before loading
+        let parsed: { version?: number };
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          this.setStatus('Invalid save file.', 0xff6644);
+          return;
+        }
+        if (typeof parsed.version !== 'number') {
+          this.setStatus('Invalid save file (no version).', 0xff6644);
+          return;
+        }
+        if (parsed.version > CURRENT_VERSION) {
+          this.setStatus(`Save is from a newer version (v${parsed.version} > v${CURRENT_VERSION}). Update the game first.`, 0xff6644);
           return;
         }
         const state = deserialize(text);
