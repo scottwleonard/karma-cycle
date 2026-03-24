@@ -16,6 +16,7 @@ export class Mandala extends Container {
   private targetGlowAlpha = 0.08;
   private breathPhase = 0;
   private enlightenmentRings: Graphics[] = [];
+  private themeColor = 0xffd700;
 
   constructor(radius: number) {
     super();
@@ -23,11 +24,30 @@ export class Mandala extends Container {
     this.buildMandala(radius);
   }
 
+  /** Rebuild the mandala with a new primary color */
+  setThemeColor(color: number): void {
+    this.themeColor = color;
+    // Remove existing mandala children (keep enlightenment rings)
+    for (const ring of this.rings) {
+      this.removeChild(ring);
+      ring.destroy();
+    }
+    this.rings = [];
+    this.removeChild(this.glowRing);
+    this.glowRing.destroy();
+    this.buildMandala(this.mandalaRadius);
+    // Re-add enlightenment rings on top
+    for (const r of this.enlightenmentRings) {
+      this.addChildAt(r, 0);
+    }
+  }
+
   private buildMandala(radius: number): void {
+    const color = this.themeColor;
     // Outer glow ring — bigger, softer
     this.glowRing = new Graphics();
     this.glowRing.circle(0, 0, radius * 1.3);
-    this.glowRing.fill({ color: 0xffd700, alpha: 0.08 });
+    this.glowRing.fill({ color, alpha: 0.08 });
     this.addChild(this.glowRing);
 
     // Multiple concentric decorative rings
@@ -38,7 +58,7 @@ export class Mandala extends Container {
 
       // Ring circle
       ring.circle(0, 0, r);
-      ring.stroke({ color: 0xffd700, alpha: 0.3 + (1 - i / ringCount) * 0.5, width: 2 });
+      ring.stroke({ color, alpha: 0.3 + (1 - i / ringCount) * 0.5, width: 2 });
 
       // Spokes on alternating rings
       if (i % 2 === 0) {
@@ -48,7 +68,7 @@ export class Mandala extends Container {
           const innerR = r * 0.6;
           ring.moveTo(Math.cos(angle) * innerR, Math.sin(angle) * innerR);
           ring.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-          ring.stroke({ color: 0xffd700, alpha: 0.2, width: 1 });
+          ring.stroke({ color, alpha: 0.2, width: 1 });
         }
       }
 
@@ -58,7 +78,7 @@ export class Mandala extends Container {
         for (let d = 0; d < dotCount; d++) {
           const angle = (d / dotCount) * Math.PI * 2;
           ring.circle(Math.cos(angle) * r * 0.8, Math.sin(angle) * r * 0.8, 3);
-          ring.fill({ color: 0xffd700, alpha: 0.4 });
+          ring.fill({ color, alpha: 0.4 });
         }
       }
 
@@ -69,7 +89,7 @@ export class Mandala extends Container {
     // Center symbol (dharma wheel)
     const center = new Graphics();
     center.circle(0, 0, radius * 0.12);
-    center.fill({ color: 0xffd700, alpha: 0.8 });
+    center.fill({ color, alpha: 0.8 });
 
     // Eight spokes of the dharma wheel
     for (let s = 0; s < 8; s++) {
@@ -79,7 +99,7 @@ export class Mandala extends Container {
         Math.cos(angle) * radius * 0.2,
         Math.sin(angle) * radius * 0.2,
       );
-      center.stroke({ color: 0xffd700, alpha: 0.9, width: 2 });
+      center.stroke({ color, alpha: 0.9, width: 2 });
     }
     this.addChild(center);
     this.rings.push(center);
