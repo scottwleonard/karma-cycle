@@ -63,8 +63,8 @@ export class ActivityLog {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed;
-      top: 16px;
-      bottom: 16px;
+      top: 32px;
+      bottom: 32px;
       background: rgba(14, 14, 56, 0.95);
       border: 1px solid rgba(255, 215, 0, 0.3);
       border-radius: 12px;

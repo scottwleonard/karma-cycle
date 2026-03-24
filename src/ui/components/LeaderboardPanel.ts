@@ -21,7 +21,7 @@ export class LeaderboardPanel {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed;
-      top: 16px; left: 16px; bottom: 16px;
+      top: 32px; left: 16px; bottom: 32px;
       width: 260px;
       background: rgba(20, 20, 68, 0.95);
       border: 1px solid rgba(255, 215, 0, 0.3);
