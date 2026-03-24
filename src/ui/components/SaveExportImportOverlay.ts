@@ -184,6 +184,8 @@ export class SaveExportImportOverlay extends Container {
           return;
         }
         saveToLocal(text);
+        // Prevent beforeunload from overwriting the imported save
+        sessionStorage.setItem('karma_cycle_importing', '1');
         this.setStatus('Save loaded! Reloading...', 0x88ff88);
         setTimeout(() => window.location.reload(), 1200);
       };

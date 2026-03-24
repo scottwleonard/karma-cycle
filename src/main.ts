@@ -77,8 +77,12 @@ async function main() {
   setInterval(() => submitScore(), 10_000);
   saveManager.startAutoSave(() => engine.state);
 
-  // Save on exit
+  // Save on exit (skip if an import is in progress)
   window.addEventListener('beforeunload', () => {
+    if (sessionStorage.getItem('karma_cycle_importing')) {
+      sessionStorage.removeItem('karma_cycle_importing');
+      return;
+    }
     submitScore();
     saveManager.save(engine.state);
   });
