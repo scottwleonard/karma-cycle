@@ -14,6 +14,7 @@ import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
 import { TutorialOverlay } from '../components/TutorialOverlay';
+import { SaveExportImportOverlay } from '../components/SaveExportImportOverlay';
 import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
 import { SuggestionTracker } from '../SuggestionTracker';
@@ -139,6 +140,7 @@ export class GameScene extends Container {
 
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
+  private saveExportImportOverlay!: SaveExportImportOverlay;
   private loadTime = Date.now();
   private toastManager!: ToastManager;
   private suggestionTracker!: SuggestionTracker;
@@ -469,6 +471,11 @@ export class GameScene extends Container {
     this.tutorialOverlay = new TutorialOverlay();
     this.addChild(this.tutorialOverlay);
 
+    // === SAVE EXPORT/IMPORT OVERLAY ===
+    this.saveExportImportOverlay = new SaveExportImportOverlay(gw);
+    this.saveExportImportOverlay.setGetState(() => this.engine.state);
+    this.addChild(this.saveExportImportOverlay);
+
     // Header buttons (top-right)
     const suggestBtn = new ActionButton('Suggest', 170, 50, 0x998833, () => {
       this.suggestOverlay.show(this.layout);
@@ -484,9 +491,16 @@ export class GameScene extends Container {
     resetBtn.y = 25;
     this.addChild(resetBtn);
 
+    const saveLoadBtn = new ActionButton('Save/Load', 180, 50, 0x224466, () => {
+      this.saveExportImportOverlay.show();
+    });
+    saveLoadBtn.x = gw - 550;
+    saveLoadBtn.y = 25;
+    this.addChild(saveLoadBtn);
+
     // === MUTE BUTTON ===
     this.muteButton = this.buildMuteButton();
-    this.muteButton.x = gw - 500;
+    this.muteButton.x = gw - 620;
     this.muteButton.y = 25;
     this.addChild(this.muteButton);
   }
