@@ -30,6 +30,13 @@ Players can suggest features from in-game. The pipeline:
 5. **Netlify Deploy Preview** auto-deploys the PR
 6. **`preview-comment.yml`** → comments the preview URL on the original issue
 
+**Triaging community suggestions:**
+When a suggestion comes in, classify it and apply the appropriate label:
+- `enhancement` — new feature request
+- `bug` — report of broken or incorrect behavior
+- `invalid` — incomprehensible in the context of the game. Close immediately without implementing.
+- `question` — needs clarification before implementing. Comment asking for details, do not implement yet.
+
 **When implementing community suggestions:**
 - Keep changes minimal and focused
 - Add new files where possible rather than heavily modifying existing ones

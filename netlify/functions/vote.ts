@@ -2,8 +2,8 @@ import type { Handler } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 
 const REPO = 'scottwleonard/karma-cycle';
-const VOTES_TO_MERGE = 3;
-const VOTES_TO_REJECT = 3;
+const VOTES_TO_MERGE = 1;
+const VOTES_TO_REJECT = 1;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL;

@@ -43,7 +43,19 @@ jobs:
 
             ## Instructions
 
-            1. First, comment on issue #${{ github.event.issue.number }} that you are starting work:
+            0. **Triage first.** Read the suggestion and classify it:
+               - If it's a new feature: `gh issue edit ${{ github.event.issue.number }} --add-label enhancement`
+               - If it's a bug report: `gh issue edit ${{ github.event.issue.number }} --add-label bug`
+               - If it's incomprehensible or nonsensical in the context of the game:
+                 `gh issue edit ${{ github.event.issue.number }} --add-label invalid`
+                 Comment explaining why, close the issue, and **stop here** — do not implement.
+               - If it needs clarification:
+                 `gh issue edit ${{ github.event.issue.number }} --add-label question`
+                 Comment asking for details and **stop here** — do not implement yet.
+               - If it violates the guardrails in CLAUDE.md (no assholes clause):
+                 Comment explaining the violation, label with `wontfix`, close the issue, and **stop here**.
+
+            1. Comment on issue #${{ github.event.issue.number }} that you are starting work:
                gh issue comment ${{ github.event.issue.number }} --body "🔧 Starting implementation..."
 
             2. Create a descriptive branch name based on the suggestion content.

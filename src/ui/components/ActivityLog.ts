@@ -40,8 +40,8 @@ interface VoteCounts {
   [prNumber: number]: VoteInfo;
 }
 
-const VOTES_TO_MERGE = 3;
-const VOTES_TO_REJECT = 3;
+const VOTES_TO_MERGE = 1;
+const VOTES_TO_REJECT = 1;
 
 export class ActivityLog {
   private container: HTMLDivElement;
