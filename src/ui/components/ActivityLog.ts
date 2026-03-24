@@ -77,15 +77,12 @@ export class ActivityLog {
     // Version bar
     this.versionBar = document.createElement('div');
     this.versionBar.style.cssText = `
-      padding: 4px 8px;
-      font-size: 9px;
-      color: rgba(255, 215, 0, 0.3);
-      text-align: center;
-      border-bottom: 1px solid rgba(255, 215, 0, 0.08);
+      color: #ffd700; font-size: 18px; font-weight: bold;
+      text-align: center; padding: 16px 8px 8px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
       flex-shrink: 0;
-      letter-spacing: 0.5px;
     `;
-    this.versionBar.textContent = buildHash ? `v${buildHash}` : '';
+    this.versionBar.textContent = buildHash ? `Version: ${buildHash}` : '';
     this.container.appendChild(this.versionBar);
 
     // Tab bar
