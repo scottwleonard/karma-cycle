@@ -7,6 +7,7 @@ import { calculateLayout } from './ui/layout';
 import { GameScene } from './ui/scenes/GameScene';
 import { AudioManager } from './audio/AudioManager';
 import { showNamePrompt } from './ui/components/NamePrompt';
+import { showAgeGate } from './ui/components/AgeGate';
 import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
 import { VersionChecker } from './ui/VersionChecker';
 import { loadAvatarLocal } from './ui/avatarUtils';
@@ -24,6 +25,9 @@ async function main() {
   const container = document.getElementById('app');
   if (!container) throw new Error('No #app element found');
   container.appendChild(app.canvas);
+
+  // Age verification gate — must confirm 18+ before playing
+  await showAgeGate(app.stage);
 
   // Load or create game state (reset flag clears save before loading)
   const saveManager = new SaveManager();
