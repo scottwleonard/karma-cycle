@@ -34,7 +34,7 @@ export class ToastManager {
       background: #1e2058;
       border: 1px solid #ffd700;
       border-radius: 8px;
-      padding: 12px 20px;
+      padding: 12px 24px;
       font-family: monospace;
       font-size: 14px;
       color: #ffd700;

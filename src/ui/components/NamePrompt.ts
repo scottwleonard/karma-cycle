@@ -17,7 +17,7 @@ export function showNamePrompt(): Promise<string> {
       background: #1a1a4e;
       border: 2px solid #ffd700;
       border-radius: 12px;
-      padding: 40px;
+      padding: 32px;
       text-align: center;
       max-width: 400px;
       width: 90%;
@@ -26,7 +26,7 @@ export function showNamePrompt(): Promise<string> {
     const title = document.createElement('div');
     title.textContent = 'Welcome, Seeker';
     title.style.cssText = `
-      color: #ffd700; font-size: 28px; font-weight: bold; margin-bottom: 12px;
+      color: #ffd700; font-size: 28px; font-weight: bold; margin-bottom: 8px;
     `;
 
     const subtitle = document.createElement('div');
@@ -42,7 +42,7 @@ export function showNamePrompt(): Promise<string> {
       background: #0a0a2e; border: 2px solid #ffd700; border-radius: 8px;
       color: #ffffff; font-family: monospace; font-size: 18px;
       padding: 12px; outline: none; text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     `;
 
     const btn = document.createElement('button');

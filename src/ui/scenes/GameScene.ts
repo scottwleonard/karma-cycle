@@ -573,25 +573,32 @@ export class GameScene extends Container {
     const GM = 40;
     const contentW = gw - GM * 2;
 
-    // Need bars — use stat-specific colors for visual consistency
-    this.hungerBar = new NeedBar('Hunger', contentW, 32, CONFIG.display.hungerColor);
+    // Need bars — 32px tall, 8px gap between each
+    const barH = 32;
+    const barGap = 8;
+    let curY = 8;
+
+    this.hungerBar = new NeedBar('Hunger', contentW, barH, CONFIG.display.hungerColor);
     this.hungerBar.x = GM;
-    this.hungerBar.y = 10;
+    this.hungerBar.y = curY;
     this.gameView.addChild(this.hungerBar);
+    curY += barH + barGap;
 
-    this.shelterBar = new NeedBar('Shelter', contentW, 32, CONFIG.display.shelterColor);
+    this.shelterBar = new NeedBar('Shelter', contentW, barH, CONFIG.display.shelterColor);
     this.shelterBar.x = GM;
-    this.shelterBar.y = 60;
+    this.shelterBar.y = curY;
     this.gameView.addChild(this.shelterBar);
+    curY += barH + barGap;
 
-    this.healthBar = new NeedBar('Health', contentW, 32, CONFIG.display.healthColor);
+    this.healthBar = new NeedBar('Health', contentW, barH, CONFIG.display.healthColor);
     this.healthBar.x = GM;
-    this.healthBar.y = 110;
+    this.healthBar.y = curY;
     this.gameView.addChild(this.healthBar);
+    curY += barH + 16; // 16px gap before buttons (section break)
 
     // Action buttons — evenly spaced within content area
-    const btnY = 175;
-    const btnGap = 10;
+    const btnY = curY;
+    const btnGap = 12;
     const btnW = (contentW - btnGap * 2) / 3;
 
     this.feedButton = new ActionButton('Feed', btnW, 80, CONFIG.display.hungerColor, () => {
@@ -640,7 +647,7 @@ export class GameScene extends Container {
 
 
     // Auto toggles (hidden until soul upgrade purchased)
-    const toggleY = btnY + 86;
+    const toggleY = btnY + 80 + 8; // button height + xs gap
     this.autoFeedToggle = this.buildToggle('Auto Feed', CONFIG.display.hungerColor, () => {
       this.engine.state.autoFeedEnabled = !this.engine.state.autoFeedEnabled;
     });
@@ -658,7 +665,7 @@ export class GameScene extends Container {
     this.gameView.addChild(this.autoRepairToggle);
 
     // === INLINE UPGRADE SHOP — only unpurchased upgrades shown ===
-    const shopY = btnY + 125;
+    const shopY = toggleY + 32 + 16; // toggle height + md gap
 
     this.upgradeHeader = new Text({
       text: '— Upgrades —',
@@ -674,7 +681,7 @@ export class GameScene extends Container {
     this.upgradeHeader.y = shopY;
     this.gameView.addChild(this.upgradeHeader);
 
-    this.upgradeContainerBaseY = shopY + 30;
+    this.upgradeContainerBaseY = shopY + 32;
     this.upgradeContainer = new Container();
     this.upgradeContainer.x = GM;
     this.upgradeContainer.y = this.upgradeContainerBaseY;
@@ -809,7 +816,7 @@ export class GameScene extends Container {
     // Event log — fixed position below upgrade area, aligned to content area
     this.eventLog = new EventLog(contentW, 200);
     this.eventLog.x = GM;
-    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 8;
+    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 16;
     this.gameView.addChild(this.eventLog);
   }
 
@@ -818,7 +825,7 @@ export class GameScene extends Container {
     const gw = CONFIG.display.referenceWidth;
     const rowW = gw - 80;
     const rowH = 56;
-    const gap = 4;
+    const gap = 8;
     const state = this.engine.state;
 
     // Remove all children first

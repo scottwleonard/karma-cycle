@@ -79,7 +79,7 @@ export class ActivityLog {
     this.versionBar = document.createElement('div');
     this.versionBar.style.cssText = `
       color: #ffd700; font-size: 18px; font-weight: bold;
-      text-align: center; padding: 16px 8px 8px;
+      text-align: center; padding: 16px 12px 12px;
       border-bottom: 1px solid rgba(255, 215, 0, 0.3);
       flex-shrink: 0;
     `;
@@ -125,7 +125,7 @@ export class ActivityLog {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 4px 0;
+      padding: 8px 0;
       display: flex;
       flex-direction: column;
       scrollbar-width: thin;
@@ -138,7 +138,7 @@ export class ActivityLog {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 4px 0;
+      padding: 8px 0;
       display: none;
       flex-direction: column;
       scrollbar-width: thin;
@@ -157,7 +157,7 @@ export class ActivityLog {
     const tab = document.createElement('div');
     tab.style.cssText = `
       flex: 1;
-      padding: 8px 4px 6px;
+      padding: 12px 8px;
       font-size: 10px;
       font-weight: bold;
       text-align: center;
@@ -175,7 +175,7 @@ export class ActivityLog {
   private async loadCommunityUpdates(): Promise<void> {
     this.communityPanel.innerHTML = '';
     const loading = document.createElement('div');
-    loading.style.cssText = 'padding: 12px 8px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
+    loading.style.cssText = 'padding: 16px 12px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
     loading.textContent = 'Loading...';
     this.communityPanel.appendChild(loading);
 
@@ -193,7 +193,7 @@ export class ActivityLog {
 
       if (prs.length === 0) {
         const empty = document.createElement('div');
-        empty.style.cssText = 'padding: 12px 8px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
+        empty.style.cssText = 'padding: 16px 12px; font-size: 11px; color: rgba(255,215,0,0.4); text-align: center;';
         empty.textContent = 'No proposed changes right now.';
         this.communityPanel.appendChild(empty);
         return;
@@ -201,7 +201,7 @@ export class ActivityLog {
 
       const header = document.createElement('div');
       header.style.cssText = `
-        padding: 6px 8px 4px;
+        padding: 12px 12px 8px;
         font-size: 10px;
         color: rgba(255, 215, 0, 0.4);
         border-bottom: 1px solid rgba(255, 215, 0, 0.08);
@@ -218,7 +218,7 @@ export class ActivityLog {
     } catch {
       this.communityPanel.innerHTML = '';
       const err = document.createElement('div');
-      err.style.cssText = 'padding: 12px 8px; font-size: 11px; color: #cc6666; text-align: center;';
+      err.style.cssText = 'padding: 16px 12px; font-size: 11px; color: #cc6666; text-align: center;';
       err.textContent = 'Failed to load. Try again later.';
       this.communityPanel.appendChild(err);
     }
@@ -227,14 +227,14 @@ export class ActivityLog {
   private makeCommunityEntry(issue: OpenPR, votes: VoteInfo): HTMLDivElement {
     const entry = document.createElement('div');
     entry.style.cssText = `
-      padding: 6px 8px;
+      padding: 8px 12px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       font-size: 11px;
       line-height: 1.5;
     `;
 
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'color: #dddddd; word-break: break-word; margin-bottom: 4px;';
+    titleEl.style.cssText = 'color: #dddddd; word-break: break-word; margin-bottom: 8px;';
     titleEl.textContent = `#${issue.number} ${issue.title}`;
     entry.appendChild(titleEl);
 
@@ -242,7 +242,7 @@ export class ActivityLog {
     const progressWrap = document.createElement('div');
     progressWrap.style.cssText = `
       background: rgba(255, 255, 255, 0.06); border-radius: 4px;
-      height: 14px; margin-bottom: 6px; position: relative; overflow: hidden;
+      height: 14px; margin-bottom: 8px; position: relative; overflow: hidden;
       display: flex;
     `;
     const upFill = document.createElement('div');
@@ -272,7 +272,7 @@ export class ActivityLog {
     entry.appendChild(progressWrap);
 
     const links = document.createElement('div');
-    links.style.cssText = 'display: flex; gap: 4px; flex-wrap: wrap; align-items: center;';
+    links.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; align-items: center;';
 
     const isPreview = isPreviewDeploy();
 
@@ -304,7 +304,7 @@ export class ActivityLog {
       btn.style.cssText = `
         background: ${isThis ? (isUp ? 'rgba(255,215,0,0.15)' : 'rgba(204,102,102,0.15)') : 'rgba(255,255,255,0.05)'};
         border: 1px solid ${isThis ? color : 'rgba(255,255,255,0.15)'};
-        border-radius: 4px; padding: 2px 8px; cursor: pointer;
+        border-radius: 4px; padding: 4px 8px; cursor: pointer;
         color: ${color}; font-family: monospace; font-size: 10px;
         opacity: ${isThis ? '0.85' : '1'};
       `;
@@ -430,7 +430,7 @@ export class ActivityLog {
 
     const entry = document.createElement('div');
     entry.style.cssText = `
-      padding: 3px 8px;
+      padding: 4px 12px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       font-size: 11px;
       line-height: 1.4;

@@ -124,6 +124,16 @@ export const CONFIG = {
       releaseSpeed: 0.5,
     },
   },
+  // 4px-based spacing scale for consistent UI
+  spacing: {
+    xxs: 4,
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    xxl: 48,
+  },
   display: {
     referenceWidth: 1080,
     referenceHeight: 1920,

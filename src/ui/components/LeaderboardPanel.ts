@@ -38,14 +38,14 @@ export class LeaderboardPanel {
     title.textContent = 'Leaderboard';
     title.style.cssText = `
       color: #ffd700; font-size: 18px; font-weight: bold;
-      text-align: center; padding: 16px 8px 8px;
+      text-align: center; padding: 16px 12px 12px;
       border-bottom: 1px solid rgba(255, 215, 0, 0.3);
       flex-shrink: 0;
     `;
     this.container.appendChild(title);
 
     this.list = document.createElement('div');
-    this.list.style.cssText = `padding: 8px; overflow-y: auto; flex: 1;`;
+    this.list.style.cssText = `padding: 8px 12px; overflow-y: auto; flex: 1;`;
     this.container.appendChild(this.list);
 
     this.highScoresSection = document.createElement('div');
@@ -68,7 +68,6 @@ export class LeaderboardPanel {
 
   /** Update layout based on available space */
   updateLayout(gameOffsetX: number): void {
-    // Only show if there's enough room to the left of the game
     if (gameOffsetX < 280) {
       this.container.style.display = 'none';
       return;
@@ -85,10 +84,9 @@ export class LeaderboardPanel {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: this.playerName, karma, lives, tier }),
       });
-      // Refresh display immediately after submitting
       this.fetch();
     } catch {
-      // Silent fail — leaderboard is non-critical
+      // Silent fail
     }
   }
 
@@ -110,57 +108,60 @@ export class LeaderboardPanel {
     if (entries.length === 0) {
       const empty = document.createElement('div');
       empty.textContent = 'No scores yet. Be the first!';
-      empty.style.cssText = `color: #888; font-size: 13px; text-align: center; padding: 20px 0;`;
+      empty.style.cssText = `color: #888; font-size: 13px; text-align: center; padding: 24px 0;`;
       this.list.appendChild(empty);
       return;
     }
 
     entries.forEach((entry, i) => {
-      const row = document.createElement('div');
-      const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
-      row.style.cssText = `
-        display: flex; align-items: center; gap: 8px;
-        padding: 6px 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        ${isPlayer ? 'background: rgba(255, 215, 0, 0.1); border-radius: 4px;' : ''}
-      `;
-
-      const rank = document.createElement('span');
-      rank.textContent = `${i + 1}.`;
-      rank.style.cssText = `
-        color: ${i < 3 ? '#ffd700' : '#666'};
-        font-size: 13px; min-width: 24px; text-align: right;
-      `;
-
-      const tierIcon = document.createElement('span');
-      tierIcon.textContent = TIER_NAMES[entry.tier] || '';
-      tierIcon.style.cssText = `font-size: 14px; min-width: 18px;`;
-
-      const info = document.createElement('div');
-      info.style.cssText = `flex: 1; min-width: 0;`;
-
-      const name = document.createElement('div');
-      name.textContent = entry.name;
-      name.style.cssText = `
-        font-size: 13px; font-weight: ${isPlayer ? 'bold' : 'normal'};
-        color: ${isPlayer ? '#ffd700' : '#ccc'};
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      `;
-
-      const karma = document.createElement('div');
-      karma.textContent = `${formatKarma(entry.karma)} karma · ${entry.lives} lives`;
-      karma.style.cssText = `font-size: 11px; color: #888;`;
-
-      info.appendChild(name);
-      info.appendChild(karma);
-
-      row.appendChild(rank);
-      row.appendChild(tierIcon);
-      row.appendChild(info);
-      this.list.appendChild(row);
+      this.list.appendChild(this.makeRow(entry, i, `${i + 1}.`));
     });
 
     this.renderAllTimeHighScores(allTime);
+  }
+
+  private makeRow(entry: LeaderboardEntry, i: number, rankText: string): HTMLDivElement {
+    const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
+    const row = document.createElement('div');
+    row.style.cssText = `
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      ${isPlayer ? 'background: rgba(255, 215, 0, 0.1); border-radius: 4px;' : ''}
+    `;
+
+    const rank = document.createElement('span');
+    rank.textContent = rankText;
+    rank.style.cssText = `
+      color: ${i < 3 ? '#ffd700' : '#666'};
+      font-size: 13px; min-width: 24px; text-align: right;
+    `;
+
+    const tierIcon = document.createElement('span');
+    tierIcon.textContent = TIER_NAMES[entry.tier] || '';
+    tierIcon.style.cssText = `font-size: 14px; min-width: 16px;`;
+
+    const info = document.createElement('div');
+    info.style.cssText = `flex: 1; min-width: 0;`;
+
+    const name = document.createElement('div');
+    name.textContent = entry.name;
+    name.style.cssText = `
+      font-size: 13px; font-weight: ${isPlayer ? 'bold' : 'normal'};
+      color: ${isPlayer ? '#ffd700' : '#ccc'};
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    `;
+
+    const karma = document.createElement('div');
+    karma.textContent = `${formatKarma(entry.karma)} karma · ${entry.lives} lives`;
+    karma.style.cssText = `font-size: 11px; color: #888; margin-top: 2px;`;
+
+    info.appendChild(name);
+    info.appendChild(karma);
+    row.appendChild(rank);
+    row.appendChild(tierIcon);
+    row.appendChild(info);
+    return row;
   }
 
   private renderAllTimeHighScores(allTime: LeaderboardEntry[]): void {
@@ -170,7 +171,7 @@ export class LeaderboardPanel {
     sectionTitle.textContent = '★ All Time High Scores';
     sectionTitle.style.cssText = `
       color: #ffd700; font-size: 13px; font-weight: bold;
-      text-align: center; padding: 10px 8px 6px;
+      text-align: center; padding: 12px 12px 8px;
       letter-spacing: 0.5px;
     `;
     this.highScoresSection.appendChild(sectionTitle);
@@ -178,44 +179,9 @@ export class LeaderboardPanel {
     const MEDALS = ['🥇', '🥈', '🥉'];
 
     allTime.forEach((entry, i) => {
-      const row = document.createElement('div');
-      const isPlayer = entry.name.toLowerCase() === this.playerName.toLowerCase();
-      row.style.cssText = `
-        display: flex; align-items: center; gap: 8px;
-        padding: 6px 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        ${isPlayer ? 'background: rgba(255, 215, 0, 0.1); border-radius: 4px;' : ''}
-      `;
-
-      const medal = document.createElement('span');
-      medal.textContent = MEDALS[i];
-      medal.style.cssText = `font-size: 16px; min-width: 24px; text-align: center;`;
-
-      const tierIcon = document.createElement('span');
-      tierIcon.textContent = TIER_NAMES[entry.tier] || '';
-      tierIcon.style.cssText = `font-size: 14px; min-width: 18px;`;
-
-      const info = document.createElement('div');
-      info.style.cssText = `flex: 1; min-width: 0;`;
-
-      const name = document.createElement('div');
-      name.textContent = entry.name;
-      name.style.cssText = `
-        font-size: 13px; font-weight: ${isPlayer ? 'bold' : 'normal'};
-        color: ${isPlayer ? '#ffd700' : '#ccc'};
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      `;
-
-      const karmaEl = document.createElement('div');
-      karmaEl.textContent = `${formatKarma(entry.karma)} karma`;
-      karmaEl.style.cssText = `font-size: 11px; color: #aaa;`;
-
-      info.appendChild(name);
-      info.appendChild(karmaEl);
-
-      row.appendChild(medal);
-      row.appendChild(tierIcon);
-      row.appendChild(info);
+      const row = this.makeRow(entry, i, MEDALS[i]);
+      row.style.borderBottom = 'none';
+      row.style.borderTop = '1px solid rgba(255, 255, 255, 0.06)';
       this.highScoresSection.appendChild(row);
     });
   }
