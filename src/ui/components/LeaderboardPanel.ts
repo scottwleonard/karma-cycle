@@ -21,15 +21,17 @@ export class LeaderboardPanel {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed;
-      top: 0; left: 0;
-      width: 260px; height: 100vh;
+      top: 16px; left: 16px; bottom: 16px;
+      width: 260px;
       background: rgba(20, 20, 68, 0.95);
-      border-right: 2px solid #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
       font-family: monospace;
       color: #dddddd;
       z-index: 100;
       display: none;
       flex-direction: column;
+      overflow: hidden;
     `;
 
     const title = document.createElement('div');
@@ -72,7 +74,7 @@ export class LeaderboardPanel {
       return;
     }
     this.container.style.display = 'flex';
-    this.container.style.width = `${Math.min(gameOffsetX - 20, 300)}px`;
+    this.container.style.width = `${Math.min(gameOffsetX - 32, 300)}px`;
   }
 
   /** Submit player score and refresh the display */

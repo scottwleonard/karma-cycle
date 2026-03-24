@@ -63,10 +63,11 @@ export class ActivityLog {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed;
-      top: 0;
-      bottom: 0;
+      top: 16px;
+      bottom: 16px;
       background: rgba(14, 14, 56, 0.95);
-      border-left: 1px solid rgba(255, 215, 0, 0.3);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
       display: none;
       flex-direction: column;
       font-family: monospace;
@@ -413,7 +414,7 @@ export class ActivityLog {
       return;
     }
 
-    const panelWidth = Math.min(available - 10, MAX_SIDEBAR_WIDTH);
+    const panelWidth = Math.min(available - 32, MAX_SIDEBAR_WIDTH);
     const panelLeft = gameRight + Math.floor((available - panelWidth) / 2);
 
     this.container.style.left = `${panelLeft}px`;
