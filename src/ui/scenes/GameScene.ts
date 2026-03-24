@@ -191,6 +191,7 @@ export class GameScene extends Container {
   private buildUI(): void {
     const gw = CONFIG.display.referenceWidth;
     const gh = CONFIG.display.referenceHeight;
+    const MARGIN = 40;
 
     // Position the game container
     this.x = this.layout.offsetX;
@@ -212,7 +213,7 @@ export class GameScene extends Container {
         fill: 0xffffff,
       },
     });
-    this.headerText.x = 40;
+    this.headerText.x = MARGIN;
     this.headerText.y = 30;
     this.addChild(this.headerText);
 
@@ -249,15 +250,15 @@ export class GameScene extends Container {
     this.numberPops.y = mandalaY - 100;
     this.addChild(this.numberPops);
 
-    // === RESOURCE COUNTERS ===
+    // === RESOURCE COUNTERS (symmetric left/right of mandala) ===
     this.karmaCounter = new ResourceCounter('Karma', CONFIG.display.karmaColor, 44);
-    this.karmaCounter.x = 60;
+    this.karmaCounter.x = MARGIN;
     this.karmaCounter.y = mandalaY - 60;
     this.addChild(this.karmaCounter);
 
     this.wealthCounter = new ResourceCounter('Wealth', CONFIG.display.wealthColor, 36);
     this.wealthCounter.x = gw - 280;
-    this.wealthCounter.y = mandalaY - 50;
+    this.wealthCounter.y = mandalaY - 60;
     this.addChild(this.wealthCounter);
 
     this.lifetimeKarmaText = new Text({
@@ -268,7 +269,7 @@ export class GameScene extends Container {
         fill: 0xddbb44,
       },
     });
-    this.lifetimeKarmaText.x = 60;
+    this.lifetimeKarmaText.x = MARGIN;
     this.lifetimeKarmaText.y = mandalaY + 200;
     this.addChild(this.lifetimeKarmaText);
 
@@ -280,7 +281,7 @@ export class GameScene extends Container {
         fill: 0xffdd55,
       },
     });
-    this.bankedKarmaText.x = 60;
+    this.bankedKarmaText.x = MARGIN;
     this.bankedKarmaText.y = mandalaY + 200;
     this.bankedKarmaText.visible = false;
     this.addChild(this.bankedKarmaText);
@@ -476,32 +477,40 @@ export class GameScene extends Container {
     this.saveExportImportOverlay.setGetState(() => this.engine.state);
     this.addChild(this.saveExportImportOverlay);
 
-    // Header buttons (top-right)
-    const suggestBtn = new ActionButton('Suggest', 170, 50, 0x998833, () => {
+    // Header buttons (top-right, evenly spaced)
+    const headerY = 25;
+    const headerGap = 8;
+    let headerX = gw - MARGIN;
+
+    const suggestBtn = new ActionButton('Suggest', 160, 50, 0x998833, () => {
       this.suggestOverlay.show(this.layout);
     });
-    suggestBtn.x = gw - 190;
-    suggestBtn.y = 25;
+    headerX -= 160;
+    suggestBtn.x = headerX;
+    suggestBtn.y = headerY;
     this.addChild(suggestBtn);
 
-    const resetBtn = new ActionButton('Reset', 140, 50, 0xaa3333, () => {
+    const resetBtn = new ActionButton('Reset', 120, 50, 0xaa3333, () => {
       this.resetOverlay.visible = true;
     });
-    resetBtn.x = gw - 350;
-    resetBtn.y = 25;
+    headerX -= 120 + headerGap;
+    resetBtn.x = headerX;
+    resetBtn.y = headerY;
     this.addChild(resetBtn);
 
-    const saveLoadBtn = new ActionButton('Save/Load', 180, 50, 0x224466, () => {
+    const saveLoadBtn = new ActionButton('Save/Load', 170, 50, 0x224466, () => {
       this.saveExportImportOverlay.show();
     });
-    saveLoadBtn.x = gw - 550;
-    saveLoadBtn.y = 25;
+    headerX -= 170 + headerGap;
+    saveLoadBtn.x = headerX;
+    saveLoadBtn.y = headerY;
     this.addChild(saveLoadBtn);
 
     // === MUTE BUTTON ===
     this.muteButton = this.buildMuteButton();
-    this.muteButton.x = gw - 620;
-    this.muteButton.y = 25;
+    headerX -= 50 + headerGap;
+    this.muteButton.x = headerX;
+    this.muteButton.y = headerY;
     this.addChild(this.muteButton);
   }
 
@@ -558,27 +567,31 @@ export class GameScene extends Container {
 
   private buildGameView(gw: number): void {
     this.gameView = new Container();
-    const barWidth = gw - 80;
+
+    // Consistent margin for all game view elements
+    const GM = 40;
+    const contentW = gw - GM * 2;
 
     // Need bars — use stat-specific colors for visual consistency
-    this.hungerBar = new NeedBar('Hunger', barWidth, 32, CONFIG.display.hungerColor);
-    this.hungerBar.x = 40;
+    this.hungerBar = new NeedBar('Hunger', contentW, 32, CONFIG.display.hungerColor);
+    this.hungerBar.x = GM;
     this.hungerBar.y = 10;
     this.gameView.addChild(this.hungerBar);
 
-    this.shelterBar = new NeedBar('Shelter', barWidth, 32, CONFIG.display.shelterColor);
-    this.shelterBar.x = 40;
+    this.shelterBar = new NeedBar('Shelter', contentW, 32, CONFIG.display.shelterColor);
+    this.shelterBar.x = GM;
     this.shelterBar.y = 60;
     this.gameView.addChild(this.shelterBar);
 
-    this.healthBar = new NeedBar('Health', barWidth, 32, CONFIG.display.healthColor);
-    this.healthBar.x = 40;
+    this.healthBar = new NeedBar('Health', contentW, 32, CONFIG.display.healthColor);
+    this.healthBar.x = GM;
     this.healthBar.y = 110;
     this.gameView.addChild(this.healthBar);
 
-    // Action buttons — brighter colors
+    // Action buttons — evenly spaced within content area
     const btnY = 175;
-    const btnW = (gw - 100) / 3;
+    const btnGap = 10;
+    const btnW = (contentW - btnGap * 2) / 3;
 
     this.feedButton = new ActionButton('Feed', btnW, 80, CONFIG.display.hungerColor, () => {
       const cost = getFeedCost(this.engine.state);
@@ -592,7 +605,7 @@ export class GameScene extends Container {
         this.particles.burst(5, 0xff8c00);
       }
     });
-    this.feedButton.x = 30;
+    this.feedButton.x = GM;
     this.feedButton.y = btnY;
     this.gameView.addChild(this.feedButton);
 
@@ -608,7 +621,7 @@ export class GameScene extends Container {
         this.particles.burst(5, 0x20b2aa);
       }
     });
-    this.repairButton.x = 40 + btnW;
+    this.repairButton.x = GM + btnW + btnGap;
     this.repairButton.y = btnY;
     this.gameView.addChild(this.repairButton);
 
@@ -620,7 +633,7 @@ export class GameScene extends Container {
       this.mandala.pulse(2);
       this.particles.burst(30, 0xbb88ff);
     });
-    this.rebirthButton.x = 50 + btnW * 2;
+    this.rebirthButton.x = GM + (btnW + btnGap) * 2;
     this.rebirthButton.y = btnY;
     this.gameView.addChild(this.rebirthButton);
 
@@ -630,7 +643,7 @@ export class GameScene extends Container {
     this.autoFeedToggle = this.buildToggle('Auto Feed', CONFIG.display.hungerColor, () => {
       this.engine.state.autoFeedEnabled = !this.engine.state.autoFeedEnabled;
     });
-    this.autoFeedToggle.x = 30;
+    this.autoFeedToggle.x = GM;
     this.autoFeedToggle.y = toggleY;
     this.autoFeedToggle.visible = false;
     this.gameView.addChild(this.autoFeedToggle);
@@ -638,7 +651,7 @@ export class GameScene extends Container {
     this.autoRepairToggle = this.buildToggle('Auto Repair', CONFIG.display.shelterColor, () => {
       this.engine.state.autoRepairEnabled = !this.engine.state.autoRepairEnabled;
     });
-    this.autoRepairToggle.x = 280;
+    this.autoRepairToggle.x = GM + btnW + btnGap;
     this.autoRepairToggle.y = toggleY;
     this.autoRepairToggle.visible = false;
     this.gameView.addChild(this.autoRepairToggle);
@@ -662,13 +675,13 @@ export class GameScene extends Container {
 
     this.upgradeContainerBaseY = shopY + 30;
     this.upgradeContainer = new Container();
-    this.upgradeContainer.x = 30;
+    this.upgradeContainer.x = GM;
     this.upgradeContainer.y = this.upgradeContainerBaseY;
     this.gameView.addChild(this.upgradeContainer);
 
     // Mask to clip upgrade rows to fixed-height area
     const upgradeMask = new Graphics();
-    upgradeMask.rect(30, this.upgradeContainerBaseY, gw - 60, this.UPGRADE_AREA_H);
+    upgradeMask.rect(GM, this.upgradeContainerBaseY, contentW, this.UPGRADE_AREA_H);
     upgradeMask.fill({ color: 0xffffff });
     this.gameView.addChild(upgradeMask);
     this.upgradeContainer.mask = upgradeMask;
@@ -721,9 +734,9 @@ export class GameScene extends Container {
 
     // Interactive overlay for scroll + tap on upgrade area
     const upgradeOverlay = new Graphics();
-    upgradeOverlay.rect(0, 0, gw - 60, this.UPGRADE_AREA_H);
+    upgradeOverlay.rect(0, 0, contentW, this.UPGRADE_AREA_H);
     upgradeOverlay.fill({ color: 0xffffff, alpha: 0 });
-    upgradeOverlay.x = 30;
+    upgradeOverlay.x = GM;
     upgradeOverlay.y = this.upgradeContainerBaseY;
     upgradeOverlay.eventMode = 'static';
     upgradeOverlay.cursor = 'pointer';
@@ -774,7 +787,7 @@ export class GameScene extends Container {
     });
 
     // Scrollbar track (right edge of upgrade area)
-    const scrollbarX = gw - 22;
+    const scrollbarX = gw - GM + 2;
     this.upgradeScrollTrack = new Graphics();
     this.upgradeScrollTrack.rect(0, 0, 8, this.UPGRADE_AREA_H);
     this.upgradeScrollTrack.fill({ color: 0x2a2a5e });
@@ -792,9 +805,9 @@ export class GameScene extends Container {
     this.upgradeScrollThumb.visible = false;
     this.gameView.addChild(this.upgradeScrollThumb);
 
-    // Event log — fixed position below upgrade area
-    this.eventLog = new EventLog(gw - 80, 200);
-    this.eventLog.x = 10;
+    // Event log — fixed position below upgrade area, aligned to content area
+    this.eventLog = new EventLog(contentW, 200);
+    this.eventLog.x = GM;
     this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 20;
     this.gameView.addChild(this.eventLog);
   }
@@ -802,7 +815,7 @@ export class GameScene extends Container {
   /** Rebuild visible upgrade rows — only show unpurchased ones */
   private layoutUpgrades(): void {
     const gw = CONFIG.display.referenceWidth;
-    const rowW = gw - 60;
+    const rowW = gw - 80;
     const rowH = 56;
     const gap = 4;
     const state = this.engine.state;
