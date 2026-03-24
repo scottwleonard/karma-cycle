@@ -78,6 +78,10 @@ export class LeaderboardPanel {
     this.container.style.width = `${panel.width}px`;
   }
 
+  setPlayerName(name: string): void {
+    this.playerName = name;
+  }
+
   /** Submit player score and refresh the display */
   async submitScore(karma: number, lives: number, tier: number, avatar?: string | null): Promise<void> {
     try {

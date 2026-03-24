@@ -1107,6 +1107,9 @@ export class GameScene extends Container {
     this.victoryOverlay.visible = true;
   }
 
+  /** Register a callback for when the player changes their name */
+  onNameChange?: (newName: string) => void;
+
   private async promptNameChange(): Promise<void> {
     const currentName = this.engine.state.playerName;
     const newName = await showNamePrompt({
@@ -1119,6 +1122,7 @@ export class GameScene extends Container {
       this.engine.state.playerName = newName;
       this.profileMenu.setPlayerName(newName);
       this.activityLog.setPlayerName(newName);
+      this.onNameChange?.(newName);
     }
   }
 

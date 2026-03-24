@@ -64,6 +64,11 @@ async function main() {
   leaderboard.updateLayout(layout.leftPanel);
   leaderboard.start();
 
+  // Sync name changes to leaderboard
+  scene.onNameChange = (newName) => {
+    leaderboard.setPlayerName(newName);
+  };
+
   // Submit score periodically — uses banked karma (state.karma)
   const submitScore = () => {
     const s = engine.state;
