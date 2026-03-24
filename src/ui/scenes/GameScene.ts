@@ -240,7 +240,7 @@ export class GameScene extends Container {
     this.addChild(this.muteButton);
 
     // === HEADER (Life info — below toolbar) ===
-    const contentStartY = toolbarY + 44 + 256;
+    const contentStartY = toolbarY + 44 + 64;
 
     this.headerText = new Text({
       text: 'Life #1  |  0:00',
@@ -307,7 +307,7 @@ export class GameScene extends Container {
       },
     });
     this.lifetimeKarmaText.x = MARGIN;
-    this.lifetimeKarmaText.y = mandalaY + 200;
+    this.lifetimeKarmaText.y = mandalaY + 200 + 64;
     this.addChild(this.lifetimeKarmaText);
 
     this.bankedKarmaText = new Text({
@@ -319,13 +319,13 @@ export class GameScene extends Container {
       },
     });
     this.bankedKarmaText.x = MARGIN;
-    this.bankedKarmaText.y = mandalaY + 200;
+    this.bankedKarmaText.y = mandalaY + 200 + 64;
     this.bankedKarmaText.visible = false;
     this.addChild(this.bankedKarmaText);
 
     // === TAB CONTENT AREAS ===
     this.tabContainer = new Container();
-    this.tabContainer.y = mandalaY + 220;
+    this.tabContainer.y = mandalaY + 200 + 64 + 32 + 64;
     this.addChild(this.tabContainer);
 
     this.buildGameView(gw);
@@ -594,7 +594,7 @@ export class GameScene extends Container {
     this.healthBar.x = GM;
     this.healthBar.y = curY;
     this.gameView.addChild(this.healthBar);
-    curY += barH + 16; // 16px gap before buttons (section break)
+    curY += barH + 64; // 64px gap before buttons
 
     // Action buttons — evenly spaced within content area
     const btnY = curY;
@@ -665,7 +665,7 @@ export class GameScene extends Container {
     this.gameView.addChild(this.autoRepairToggle);
 
     // === INLINE UPGRADE SHOP — only unpurchased upgrades shown ===
-    const shopY = toggleY + 32 + 16; // toggle height + md gap
+    const shopY = toggleY + 32 + 64; // toggle height + 64px gap
 
     this.upgradeHeader = new Text({
       text: '— Upgrades —',
