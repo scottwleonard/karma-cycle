@@ -576,7 +576,7 @@ export class GameScene extends Container {
     // Need bars — 32px tall, 8px gap between each
     const barH = 32;
     const barGap = 8;
-    let curY = 8;
+    let curY = 32;
 
     this.hungerBar = new NeedBar('Hunger', contentW, barH, CONFIG.display.hungerColor);
     this.hungerBar.x = GM;
@@ -594,7 +594,7 @@ export class GameScene extends Container {
     this.healthBar.x = GM;
     this.healthBar.y = curY;
     this.gameView.addChild(this.healthBar);
-    curY += barH + 64; // 64px gap before buttons
+    curY += barH + 32; // 32px gap before buttons
 
     // Action buttons — evenly spaced within content area
     const btnY = curY;
@@ -816,7 +816,7 @@ export class GameScene extends Container {
     // Event log — fixed position below upgrade area, aligned to content area
     this.eventLog = new EventLog(contentW, 200);
     this.eventLog.x = GM;
-    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 16;
+    this.eventLog.y = this.upgradeContainerBaseY + this.UPGRADE_AREA_H + 32;
     this.gameView.addChild(this.eventLog);
   }
 
