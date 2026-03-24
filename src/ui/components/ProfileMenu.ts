@@ -1,4 +1,5 @@
 import { pickAvatar, saveAvatarLocal, loadAvatarLocal } from '../avatarUtils';
+import { AccessibilityManager } from '../../accessibility/AccessibilityManager';
 
 export interface ProfileMenuCallbacks {
   onSuggest: () => void;
@@ -132,6 +133,17 @@ export class ProfileMenu {
       },
     );
     this.dropdown.appendChild(this.muteItem);
+
+    const accessibilityItem = this.makeItem(
+      AccessibilityManager.isEnabled() ? '♿ Accessibility: ON' : '♿ Accessibility: OFF',
+      () => {
+        const enabled = AccessibilityManager.toggle();
+        accessibilityItem.textContent = enabled ? '♿ Accessibility: ON' : '♿ Accessibility: OFF';
+        accessibilityItem.style.color = enabled ? '#ffd700' : '#cccccc';
+      },
+      AccessibilityManager.isEnabled() ? '#ffd700' : '#cccccc',
+    );
+    this.dropdown.appendChild(accessibilityItem);
 
     this.dropdown.appendChild(this.makeItem('💾 Save / Load', () => {
       this.close();

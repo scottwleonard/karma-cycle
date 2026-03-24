@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import type { GameState } from '../state/GameState';
 import { getSoulUpgradeLevel } from './upgradeSystem';
 import { LIFE_UPGRADES } from '../types/upgrades';
+import { AccessibilityManager } from '../accessibility/AccessibilityManager';
 
 export function getKarmaPerSecond(state: GameState): number {
   if (!state.isAlive) return 0;
@@ -48,7 +49,7 @@ export function getKarmaPerSecond(state: GameState): number {
       ? 1 + Math.sqrt(state.bankedKarma) * CONFIG.karmaBank.coefficient
       : 1;
 
-  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier * bankMultiplier;
+  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier * bankMultiplier * AccessibilityManager.getKarmaMultiplier();
 }
 
 /**

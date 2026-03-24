@@ -10,6 +10,7 @@ import * as enlightenmentSystem from '../systems/enlightenmentSystem';
 import * as lifeEventsSystem from '../systems/lifeEventsSystem';
 import type { LifeEventResult } from '../systems/lifeEventsSystem';
 import { getSoulUpgradeLevel } from '../systems/upgradeSystem';
+import { AccessibilityManager } from '../accessibility/AccessibilityManager';
 
 export class GameEngine {
   state: GameState;
@@ -32,10 +33,10 @@ export class GameEngine {
 
     needsSystem.update(dt, this.state);
 
-    // Auto-feed when unlocked and enabled
+    // Auto-feed when unlocked and enabled, or when accessibility mode is on
     if (
-      this.state.autoFeedEnabled &&
-      getSoulUpgradeLevel(this.state, 'auto_feed') > 0 &&
+      (this.state.autoFeedEnabled &&
+        (getSoulUpgradeLevel(this.state, 'auto_feed') > 0 || AccessibilityManager.isEnabled())) &&
       this.state.needs.hunger < 50
     ) {
       const cost = getFeedCost(this.state);
@@ -48,10 +49,10 @@ export class GameEngine {
       }
     }
 
-    // Auto-repair when unlocked and enabled
+    // Auto-repair when unlocked and enabled, or when accessibility mode is on
     if (
-      this.state.autoRepairEnabled &&
-      getSoulUpgradeLevel(this.state, 'auto_repair') > 0 &&
+      (this.state.autoRepairEnabled &&
+        (getSoulUpgradeLevel(this.state, 'auto_repair') > 0 || AccessibilityManager.isEnabled())) &&
       this.state.needs.shelter < 50
     ) {
       const cost = getRepairCost(this.state);

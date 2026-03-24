@@ -10,6 +10,7 @@ import { showNamePrompt } from './ui/components/NamePrompt';
 import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
 import { VersionChecker } from './ui/VersionChecker';
 import { loadAvatarLocal } from './ui/avatarUtils';
+import { AccessibilityManager } from './accessibility/AccessibilityManager';
 
 async function main() {
   const app = new Application();
@@ -50,6 +51,9 @@ async function main() {
       `Offline for ${Math.floor(offline.offlineSeconds)}s — earned ${offline.karmaEarned.toFixed(1)} karma, ${offline.wealthEarned.toFixed(1)} wealth`,
     );
   }
+
+  // Load accessibility preference
+  AccessibilityManager.load();
 
   // Create layout, audio, and scene
   const layout = calculateLayout(app.screen.width, app.screen.height);
