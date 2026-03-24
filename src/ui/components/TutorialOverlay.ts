@@ -15,15 +15,22 @@ interface TutorialStep {
 const GW = CONFIG.display.referenceWidth;   // 1080
 const GH = CONFIG.display.referenceHeight;  // 1920
 
-// tabContainer base y = mandalaY(250) + 240 = 490
-// feedButton: x=30, y=490+175=665, btnW=(1080-100)/3≈326.7, h=80
-// repairButton: x≈40+327=367, y=665
-// upgradeSection: y≈490+175+125=790
-const TAB_Y = 490;
-const BTN_Y = TAB_Y + 175;
-const BTN_W = (GW - 100) / 3;
+// Layout mirrors GameScene.ts exactly:
+//   contentStartY=64, mandalaY=contentStartY+180=244
+//   tabContainer.y = mandalaY + 200 + 64 + 32 + 32 = 572
+//   gameView: GM=40, barH=32, barGap=8, curY starts at 32
+//     hunger bar: curY=72, shelter: curY=112, health: curY+=32+32=176
+//   feedButton: x=GM=40, y=tabContainerY+176=748, w=(1000-24)/3≈325, h=80
+//   repairButton: x=40+btnW+12≈377, y=748
+//   upgradeHeader: y=tabContainerY+(176+88+96)=tabContainerY+360=932
+const GM_SCENE = 40;
+const TAB_CONTAINER_Y = 572;
+const BTN_Y_IN_VIEW = 176;
+const BTN_Y = TAB_CONTAINER_Y + BTN_Y_IN_VIEW;  // 748
+const BTN_W = (GW - GM_SCENE * 2 - 12 * 2) / 3; // (1000-24)/3 ≈ 325
 const BTN_H = 80;
-const UPGRADE_Y = TAB_Y + 300;
+const BTN_GAP = 12;
+const UPGRADE_Y = TAB_CONTAINER_Y + 360; // upgradeHeader y in screen coords = 932
 
 const STEPS: TutorialStep[] = [
   {
@@ -45,7 +52,7 @@ const STEPS: TutorialStep[] = [
       'Low hunger drains karma and health.\n' +
       'It costs Wealth to feed — watch\n' +
       'your balance!',
-    highlight: { x: 30, y: BTN_Y, w: BTN_W, h: BTN_H },
+    highlight: { x: GM_SCENE, y: BTN_Y, w: BTN_W, h: BTN_H },
     textY: BTN_Y + BTN_H + 60,
   },
   {
@@ -54,7 +61,7 @@ const STEPS: TutorialStep[] = [
       'Press Repair to restore Shelter.\n' +
       'Poor shelter also cuts your karma rate.\n' +
       'Keep both bars above 20 to stay healthy.',
-    highlight: { x: 40 + BTN_W, y: BTN_Y, w: BTN_W, h: BTN_H },
+    highlight: { x: GM_SCENE + BTN_W + BTN_GAP, y: BTN_Y, w: BTN_W, h: BTN_H },
     textY: BTN_Y + BTN_H + 60,
   },
   {
@@ -65,7 +72,7 @@ const STEPS: TutorialStep[] = [
       'karma gain, reduce costs, and unlock\n' +
       'new abilities.\n\n' +
       'Good luck on your journey!',
-    highlight: { x: 30, y: UPGRADE_Y, w: GW - 60, h: 120 },
+    highlight: { x: GM_SCENE, y: UPGRADE_Y, w: GW - GM_SCENE * 2, h: 120 },
     textY: UPGRADE_Y - 260,
   },
 ];
