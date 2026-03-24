@@ -85,14 +85,17 @@ export class LeaderboardPanel {
   /** Submit player score and refresh the display */
   async submitScore(karma: number, lives: number, tier: number, avatar?: string | null): Promise<void> {
     try {
-      await fetch('/.netlify/functions/leaderboard', {
+      const res = await fetch('/.netlify/functions/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: this.playerName, karma, lives, tier, ...(avatar && { avatar }) }),
       });
+      if (!res.ok) {
+        console.error('Leaderboard submit failed:', res.status, await res.text());
+      }
       this.fetch();
-    } catch {
-      // Silent fail
+    } catch (e) {
+      console.error('Leaderboard submit error:', e);
     }
   }
 

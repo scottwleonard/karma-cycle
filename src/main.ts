@@ -69,12 +69,13 @@ async function main() {
     leaderboard.setPlayerName(newName);
   };
 
-  // Submit score periodically — uses banked karma (state.karma)
+  // Submit score periodically — total karma = banked + current life
   const submitScore = () => {
     const s = engine.state;
+    if (!s.playerName) return;
     const avatar = loadAvatarLocal();
-    // Total karma = banked + current life (current never banks after nirvana)
     const totalKarma = Math.floor(s.karma + s.currentKarma);
+    console.log(`[leaderboard] submitting: ${s.playerName} karma=${totalKarma}`);
     leaderboard.submitScore(totalKarma, s.lifeNumber, s.enlightenmentTier, avatar);
   };
 
