@@ -68,7 +68,9 @@ async function main() {
   const submitScore = () => {
     const s = engine.state;
     const avatar = loadAvatarLocal();
-    leaderboard.submitScore(Math.floor(s.karma), s.lifeNumber, s.enlightenmentTier, avatar);
+    // Total karma = banked + current life (current never banks after nirvana)
+    const totalKarma = Math.floor(s.karma + s.currentKarma);
+    leaderboard.submitScore(totalKarma, s.lifeNumber, s.enlightenmentTier, avatar);
   };
 
   // Game loop
