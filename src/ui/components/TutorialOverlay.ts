@@ -15,22 +15,31 @@ interface TutorialStep {
 const GW = CONFIG.display.referenceWidth;   // 1080
 const GH = CONFIG.display.referenceHeight;  // 1920
 
-// Layout mirrors GameScene.ts exactly:
-//   contentStartY=64, mandalaY=contentStartY+180=244
+// Layout mirrors GameScene.ts buildUI + buildGameView:
+//   contentStartY = 64
+//   mandalaY = contentStartY + 180 = 244
 //   tabContainer.y = mandalaY + 200 + 64 + 32 + 32 = 572
-//   gameView: GM=40, barH=32, barGap=8, curY starts at 32
-//     hunger bar: curY=72, shelter: curY=112, health: curY+=32+32=176
-//   feedButton: x=GM=40, y=tabContainerY+176=748, w=(1000-24)/3≈325, h=80
-//   repairButton: x=40+btnW+12≈377, y=748
-//   upgradeHeader: y=tabContainerY+(176+88+96)=tabContainerY+360=932
+//
+// Inside gameView (relative to tabContainer.y):
+//   GM = 40, contentW = 1000
+//   curY = 32 (initial top padding)
+//   hungerBar: y = 32
+//   shelterBar: y = 72 (32 + 32 + 8)
+//   healthBar:  y = 112 (72 + 32 + 8)
+//   curY after health = 112 + 32 + 32 = 176
+//   btnY = 176 (buttons start here)
+//   toggleY = 176 + 80 + 8 = 264
+//   shopY = 264 + 32 + 64 = 360 (upgradeHeader)
+//   upgradeContainerBaseY = 360 + 32 = 392 (first upgrade row)
 const GM_SCENE = 40;
 const TAB_CONTAINER_Y = 572;
 const BTN_Y_IN_VIEW = 176;
 const BTN_Y = TAB_CONTAINER_Y + BTN_Y_IN_VIEW;  // 748
-const BTN_W = (GW - GM_SCENE * 2 - 12 * 2) / 3; // (1000-24)/3 ≈ 325
-const BTN_H = 80;
+const CONTENT_W = GW - GM_SCENE * 2; // 1000
 const BTN_GAP = 12;
-const UPGRADE_Y = TAB_CONTAINER_Y + 360; // upgradeHeader y in screen coords = 932
+const BTN_W = (CONTENT_W - BTN_GAP * 2) / 3; // ≈ 325
+const BTN_H = 80;
+const UPGRADE_ROWS_Y = TAB_CONTAINER_Y + 392; // first upgrade row in screen coords
 
 const STEPS: TutorialStep[] = [
   {
@@ -61,7 +70,7 @@ const STEPS: TutorialStep[] = [
       'Press Repair to restore Shelter.\n' +
       'Poor shelter also cuts your karma rate.\n' +
       'Keep both bars above 20 to stay healthy.',
-    highlight: { x: GM_SCENE + BTN_W + BTN_GAP, y: BTN_Y, w: BTN_W, h: BTN_H },
+    highlight: { x: GM_SCENE + Math.floor(BTN_W) + BTN_GAP, y: BTN_Y, w: Math.floor(BTN_W), h: BTN_H },
     textY: BTN_Y + BTN_H + 60,
   },
   {
@@ -72,8 +81,8 @@ const STEPS: TutorialStep[] = [
       'karma gain, reduce costs, and unlock\n' +
       'new abilities.\n\n' +
       'Good luck on your journey!',
-    highlight: { x: GM_SCENE, y: UPGRADE_Y, w: GW - GM_SCENE * 2, h: 120 },
-    textY: UPGRADE_Y - 260,
+    highlight: { x: GM_SCENE, y: UPGRADE_ROWS_Y, w: CONTENT_W, h: 140 },
+    textY: UPGRADE_ROWS_Y - 280,
   },
 ];
 
