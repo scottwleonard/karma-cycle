@@ -152,6 +152,10 @@ export class GameScene extends Container {
   // Tutorial overlay
   private tutorialOverlay!: TutorialOverlay;
 
+  // Background rect for theme changes
+  private bgRect!: Graphics;
+  private lastEnlightenmentTier = -1;
+
   constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
     super();
     this.engine = engine;
@@ -184,11 +188,18 @@ export class GameScene extends Container {
 
   private buildUI(): void {
     const gw = CONFIG.display.referenceWidth;
+    const gh = CONFIG.display.referenceHeight;
 
     // Position the game container
     this.x = this.layout.offsetX;
     this.y = this.layout.offsetY;
     this.scale.set(this.layout.scale);
+
+    // === BACKGROUND (themed per enlightenment tier) ===
+    this.bgRect = new Graphics();
+    this.bgRect.rect(0, 0, gw, gh);
+    this.bgRect.fill({ color: CONFIG.display.bgColor });
+    this.addChild(this.bgRect);
 
     // === HEADER ===
     this.headerText = new Text({
@@ -1114,11 +1125,26 @@ export class GameScene extends Container {
     this.victoryOverlay.visible = true;
   }
 
+  private applyEnlightenmentTheme(tier: number): void {
+    const theme = CONFIG.enlightenmentThemes[Math.min(tier, CONFIG.enlightenmentThemes.length - 1)];
+    this.bgRect.clear();
+    this.bgRect.rect(0, 0, CONFIG.display.referenceWidth, CONFIG.display.referenceHeight);
+    this.bgRect.fill({ color: theme.bgColor });
+    this.particles.setColorPalette(theme.particleColors);
+    this.mandala.setThemeColor(theme.mandalaColor);
+  }
+
   update(dt: number): void {
     const state = this.engine.state;
     const netKarmaRate = getNetKarmaPerSecond(state);
     const wealthRate = getWealthPerSecond(state);
     const karmaDrain = getKarmaDrainPerSecond(state);
+
+    // Apply visual theme when enlightenment tier changes
+    if (state.enlightenmentTier !== this.lastEnlightenmentTier) {
+      this.lastEnlightenmentTier = state.enlightenmentTier;
+      this.applyEnlightenmentTheme(state.enlightenmentTier);
+    }
 
     // Audio — responds to game state intensity
     this.audioManager.update(state, netKarmaRate);

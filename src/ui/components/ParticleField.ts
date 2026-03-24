@@ -16,6 +16,7 @@ export class ParticleField extends Container {
   private spawnRate = 2;
   private spawnAccum = 0;
   private fieldWidth: number;
+  private palette: readonly number[] = KARMA_COLORS;
 
   constructor(width: number, _height: number) {
     super();
@@ -24,6 +25,10 @@ export class ParticleField extends Container {
 
   setSpawnRate(karmaPerSecond: number): void {
     this.spawnRate = Math.min(3 + karmaPerSecond * 5, 50);
+  }
+
+  setColorPalette(colors: readonly number[]): void {
+    this.palette = colors;
   }
 
   /** Spawn a burst of particles (e.g., on upgrade purchase) */
@@ -65,7 +70,7 @@ export class ParticleField extends Container {
   private spawnParticle(color?: number, isBurst = false): void {
     const g = new Graphics();
     const size = isBurst ? (3 + Math.random() * 6) : (2 + Math.random() * 5);
-    const c = color || KARMA_COLORS[Math.floor(Math.random() * KARMA_COLORS.length)];
+    const c = color || this.palette[Math.floor(Math.random() * this.palette.length)];
     g.circle(0, 0, size);
     g.fill({ color: c, alpha: 0.7 });
 

@@ -136,4 +136,31 @@ export const CONFIG = {
     panelColor: 0x1e2058,
     panelAlpha: 0.9,
   },
+  // Visual theme per enlightenment tier (0=base, 1=Awakening, 2=Bodhi, 3=Nirvana)
+  enlightenmentThemes: [
+    {
+      // Tier 0 — default dark/gold
+      bgColor: 0x0c0c38,
+      mandalaColor: 0xffd700,
+      particleColors: [0xffd700, 0xffcc00, 0xffe066, 0xffaa00, 0xfff5cc] as readonly number[],
+    },
+    {
+      // Tier 1 — Awakening: deep blue / azure
+      bgColor: 0x061828,
+      mandalaColor: 0x55ccff,
+      particleColors: [0x55ccff, 0x88eeff, 0x22aaff, 0xaaddff, 0x0099cc] as readonly number[],
+    },
+    {
+      // Tier 2 — Bodhi: deep violet / purple
+      bgColor: 0x12062a,
+      mandalaColor: 0xcc66ff,
+      particleColors: [0xcc66ff, 0xee88ff, 0xaa33ee, 0xdd99ff, 0x8833cc] as readonly number[],
+    },
+    {
+      // Tier 3 — Nirvana: near-white radiance
+      bgColor: 0x08101a,
+      mandalaColor: 0xffffff,
+      particleColors: [0xffffff, 0xeef8ff, 0xffd700, 0xaaddff, 0xffe0aa] as readonly number[],
+    },
+  ] as const,
 } as const;
