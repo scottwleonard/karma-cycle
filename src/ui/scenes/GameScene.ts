@@ -240,7 +240,7 @@ export class GameScene extends Container {
     this.addChild(this.muteButton);
 
     // === HEADER (Life info — below toolbar) ===
-    const contentStartY = toolbarY + 56;
+    const contentStartY = toolbarY + 44 + 256;
 
     this.headerText = new Text({
       text: 'Life #1  |  0:00',
