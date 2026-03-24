@@ -339,7 +339,7 @@ export class GameScene extends Container {
 
     // === TAB CONTENT AREAS ===
     this.tabContainer = new Container();
-    this.tabContainer.y = mandalaY + 200 + 64 + 32 + 64;
+    this.tabContainer.y = mandalaY + 200 + 64 + 32 + 32;
     this.addChild(this.tabContainer);
 
     this.buildGameView(gw);
