@@ -12,13 +12,11 @@ export class ActionButton extends Container {
   private urgentGlow: Graphics;
   private btnWidth: number;
   private btnHeight: number;
-  private baseColor: number;
-
   constructor(
     label: string,
     width: number,
     height: number,
-    color: number,
+    _color: number,
     onClick: () => void,
   ) {
     super();
@@ -26,7 +24,6 @@ export class ActionButton extends Container {
     this.cursor = 'pointer';
     this.btnWidth = width;
     this.btnHeight = height;
-    this.baseColor = color;
 
     this.urgentGlow = new Graphics();
     this.urgentGlow.visible = false;
@@ -104,7 +101,7 @@ export class ActionButton extends Container {
       case 'available':
         // Bright, saturated fill with a lighter top highlight
         this.bg.roundRect(0, 0, w, h, 12);
-        this.bg.fill({ color: this.baseColor });
+        this.bg.fill({ color: 0x22aa44 });
         // Top highlight strip
         this.bg.roundRect(0, 0, w, h * 0.45, 12);
         this.bg.fill({ color: 0xffffff, alpha: 0.12 });
