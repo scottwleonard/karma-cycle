@@ -119,8 +119,8 @@ export class AudioManager {
   update(state: GameState, netKarmaRate: number): void {
     if (!this.initialized || !this.ctx) return;
 
-    // Resume context if it got suspended (e.g., mobile background)
-    if (this.ctx.state === 'suspended') {
+    // Resume context if it got suspended (e.g., mobile background), but not if muted
+    if (this.ctx.state === 'suspended' && !this.muted) {
       this.ctx.resume().catch(() => {});
     }
 
