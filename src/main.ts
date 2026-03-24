@@ -52,7 +52,7 @@ async function main() {
   const layout = calculateLayout(app.screen.width, app.screen.height);
   const audioManager = new AudioManager();
   audioManager.loadMutePreference();
-  const scene = new GameScene(engine, layout, audioManager);
+  const scene = new GameScene(engine, layout, audioManager, saveManager);
   app.stage.addChild(scene);
 
   // Leaderboard panel (left side of screen)

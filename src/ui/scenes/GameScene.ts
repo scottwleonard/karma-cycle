@@ -12,6 +12,7 @@ import { ParticleField } from '../components/ParticleField';
 import { NumberPopManager } from '../components/NumberPop';
 import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
+import type { SaveManager } from '../../saves/saveManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { ToastManager } from '../components/Toast';
@@ -156,11 +157,15 @@ export class GameScene extends Container {
   private bgRect!: Graphics;
   private lastEnlightenmentTier = -1;
 
-  constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager) {
+  // Save manager for export/import
+  private saveManager: SaveManager;
+
+  constructor(engine: GameEngine, layout: LayoutInfo, audioManager: AudioManager, saveManager: SaveManager) {
     super();
     this.engine = engine;
     this.layout = layout;
     this.audioManager = audioManager;
+    this.saveManager = saveManager;
     this.buildUI();
     this.setupEvents();
 
@@ -489,6 +494,47 @@ export class GameScene extends Container {
     this.muteButton.x = gw - 500;
     this.muteButton.y = 25;
     this.addChild(this.muteButton);
+
+    // === EXPORT / IMPORT SAVE BUTTONS (top-left) ===
+    const exportBtn = new ActionButton('Export Save', 155, 50, 0x1a5a3a, () => {
+      this.saveManager.exportSave(this.engine.state);
+    });
+    exportBtn.x = 20;
+    exportBtn.y = 25;
+    this.addChild(exportBtn);
+
+    const importBtn = new ActionButton('Import Save', 155, 50, 0x1a3a5a, () => {
+      this.triggerImport();
+    });
+    importBtn.x = 185;
+    importBtn.y = 25;
+    this.addChild(importBtn);
+  }
+
+  private triggerImport(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const json = e.target?.result as string;
+        if (!json) return;
+        const newState = this.saveManager.importSave(json);
+        if (!newState) {
+          this.toastManager.show({ message: 'Invalid save file — could not import.' });
+          return;
+        }
+        this.engine.state = newState;
+        this.saveManager.save(newState);
+        this.toastManager.show({ message: 'Save imported! Reloading...' });
+        setTimeout(() => window.location.reload(), 1000);
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   private buildMuteButton(): Graphics {
