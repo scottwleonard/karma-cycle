@@ -1169,6 +1169,10 @@ export class GameScene extends Container {
     this.mandala.setThemeColor(theme.mandalaColor);
   }
 
+  updateActivityLogLayout(layout: import('../layout').LayoutInfo): void {
+    this.activityLog.updatePosition(layout);
+  }
+
   update(dt: number): void {
     const state = this.engine.state;
     const netKarmaRate = getNetKarmaPerSecond(state);

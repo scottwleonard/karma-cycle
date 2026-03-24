@@ -1,4 +1,4 @@
-import { calculateLayout } from '../layout';
+import type { LayoutInfo } from '../layout';
 
 type Severity = 'positive' | 'neutral' | 'negative';
 
@@ -18,8 +18,7 @@ const EVENT_COLORS: Record<string, string> = {
   nirvana_achieved: '#ffffff',
 };
 
-const MIN_SIDEBAR_WIDTH = 130;
-const MAX_SIDEBAR_WIDTH = 280;
+// Sidebar sizing now managed by layout.ts
 const MAX_ENTRIES = 200;
 
 interface OpenPR {
@@ -148,9 +147,9 @@ export class ActivityLog {
 
     document.body.appendChild(this.container);
 
-    this.onResize = () => this.updatePosition();
-    window.addEventListener('resize', this.onResize);
-    this.updatePosition();
+    // Position is managed externally via updatePosition()
+    this.onResize = () => {};
+    // Initial position set by caller after construction
   }
 
   private makeTab(label: string, active: boolean): HTMLDivElement {
@@ -404,21 +403,15 @@ export class ActivityLog {
     return a;
   }
 
-  updatePosition(): void {
-    const layout = calculateLayout(window.innerWidth, window.innerHeight);
-    const gameRight = layout.offsetX + layout.gameWidth;
-    const available = window.innerWidth - gameRight;
-
-    if (available < MIN_SIDEBAR_WIDTH) {
+  updatePosition(layout?: LayoutInfo): void {
+    const panel = layout?.rightPanel;
+    if (!panel) {
       this.container.style.display = 'none';
       return;
     }
 
-    const panelWidth = Math.min(available - 32, MAX_SIDEBAR_WIDTH);
-    const panelLeft = gameRight + Math.floor((available - panelWidth) / 2);
-
-    this.container.style.left = `${panelLeft}px`;
-    this.container.style.width = `${panelWidth}px`;
+    this.container.style.left = `${panel.x}px`;
+    this.container.style.width = `${panel.width}px`;
     this.container.style.display = 'flex';
   }
 

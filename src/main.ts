@@ -55,10 +55,11 @@ async function main() {
   audioManager.loadMutePreference();
   const scene = new GameScene(engine, layout, audioManager);
   app.stage.addChild(scene);
+  scene.updateActivityLogLayout(layout);
 
   // Leaderboard panel (left side of screen)
   const leaderboard = new LeaderboardPanel(engine.state.playerName);
-  leaderboard.updateLayout(layout.offsetX);
+  leaderboard.updateLayout(layout.leftPanel);
   leaderboard.start();
 
   // Submit score periodically — uses banked karma (state.karma)
@@ -94,7 +95,8 @@ async function main() {
     scene.x = newLayout.offsetX;
     scene.y = newLayout.offsetY;
     scene.scale.set(newLayout.scale);
-    leaderboard.updateLayout(newLayout.offsetX);
+    leaderboard.updateLayout(newLayout.leftPanel);
+    scene.updateActivityLogLayout(newLayout);
   });
 
   // Auto-reload on new version deploy (save first)

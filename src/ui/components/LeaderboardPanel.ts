@@ -66,14 +66,15 @@ export class LeaderboardPanel {
     this.timer = setInterval(() => this.fetch(), POLL_INTERVAL);
   }
 
-  /** Update layout based on available space */
-  updateLayout(gameOffsetX: number): void {
-    if (gameOffsetX < 280) {
+  /** Update layout from calculated position */
+  updateLayout(panel: { x: number; width: number } | null): void {
+    if (!panel) {
       this.container.style.display = 'none';
       return;
     }
     this.container.style.display = 'flex';
-    this.container.style.width = `${Math.min(gameOffsetX - 32, 300)}px`;
+    this.container.style.left = `${panel.x}px`;
+    this.container.style.width = `${panel.width}px`;
   }
 
   /** Submit player score and refresh the display */
