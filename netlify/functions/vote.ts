@@ -189,8 +189,11 @@ const handler: Handler = async (event) => {
     }
   }
 
-  // POST — cast a vote
+  // POST — cast a vote (only from preview deploys)
   if (event.httpMethod === 'POST') {
+    if (!instance.startsWith('deploy-preview-')) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Voting is only allowed from preview deploys' }) };
+    }
     let body: { pr_number?: number; player_name?: string; direction?: string };
     try {
       body = JSON.parse(event.body || '{}');

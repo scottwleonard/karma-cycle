@@ -43,6 +43,10 @@ interface VoteCounts {
 const VOTES_TO_MERGE = 1;
 const VOTES_TO_REJECT = 1;
 
+function isPreviewDeploy(): boolean {
+  return window.location.hostname.startsWith('deploy-preview-');
+}
+
 export class ActivityLog {
   private container: HTMLDivElement;
   private entriesList: HTMLDivElement;
@@ -257,8 +261,13 @@ export class ActivityLog {
     const links = document.createElement('div');
     links.style.cssText = 'display: flex; gap: 4px; flex-wrap: wrap; align-items: center;';
 
-    const preview = this.makeLink('▶ Preview', issue.previewUrl, '#88ccff');
-    links.appendChild(preview);
+    const isPreview = isPreviewDeploy();
+
+    // Show preview link only on prod (you're already on the preview in preview envs)
+    if (!isPreview) {
+      const preview = this.makeLink('▶ Preview', issue.previewUrl, '#88ccff');
+      links.appendChild(preview);
+    }
 
     const hasVotedUp = votes.upVoters.some(
       (v) => v.toLowerCase() === this.playerName.toLowerCase(),
@@ -351,8 +360,16 @@ export class ActivityLog {
       return btn;
     };
 
-    links.appendChild(makeVoteBtn('up'));
-    links.appendChild(makeVoteBtn('down'));
+    // Voting only allowed from preview deploys
+    if (isPreview) {
+      links.appendChild(makeVoteBtn('up'));
+      links.appendChild(makeVoteBtn('down'));
+    } else {
+      const votingNote = document.createElement('span');
+      votingNote.style.cssText = 'font-size: 9px; color: #666; font-style: italic;';
+      votingNote.textContent = 'Vote from preview';
+      links.appendChild(votingNote);
+    }
     entry.appendChild(links);
     return entry;
   }
