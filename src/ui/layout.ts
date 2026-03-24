@@ -1,7 +1,7 @@
 import { CONFIG } from '../config';
 
 const SIDEBAR_WIDTH = 260;
-const SIDEBAR_GAP = 16; // gap between sidebar and game canvas
+const SIDEBAR_GAP = 128; // gap between sidebar and game canvas
 const MIN_SIDEBAR_SPACE = 280; // minimum screen space to show a sidebar
 
 export interface LayoutInfo {
