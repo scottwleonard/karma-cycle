@@ -31,7 +31,12 @@ async function main() {
   const saveManager = new SaveManager();
   if (sessionStorage.getItem('karma_cycle_reset')) {
     sessionStorage.removeItem('karma_cycle_reset');
+    const oldState = saveManager.load();
+    const playerName = oldState.playerName;
     saveManager.reset();
+    const freshState = saveManager.load();
+    freshState.playerName = playerName;
+    saveManager.save(freshState);
   }
   const state = saveManager.load();
 
