@@ -206,7 +206,9 @@ export class ActivityLog {
         border-bottom: 1px solid rgba(255, 215, 0, 0.08);
         flex-shrink: 0;
       `;
-      header.textContent = `${VOTES_TO_MERGE} 👍 to ship · ${VOTES_TO_REJECT} 👎 to reject`;
+      header.textContent = isPreview
+        ? `${VOTES_TO_MERGE} 👍 to ship · ${VOTES_TO_REJECT} 👎 to reject`
+        : 'Proposed changes — vote from preview';
       this.communityPanel.appendChild(header);
 
       for (const pr of prs) {
@@ -263,7 +265,9 @@ export class ActivityLog {
       position: absolute; inset: 0; display: flex; align-items: center;
       justify-content: center; font-size: 9px; color: #ccc;
     `;
-    progressText.textContent = `👍 ${votes.up}/${VOTES_TO_MERGE}  ·  👎 ${votes.down}/${VOTES_TO_REJECT}`;
+    progressText.textContent = isPreview
+      ? `👍 ${votes.up}/${VOTES_TO_MERGE}  ·  👎 ${votes.down}/${VOTES_TO_REJECT}`
+      : `${votes.up} for · ${votes.down} against`;
     progressWrap.appendChild(upFill);
     progressWrap.appendChild(spacer);
     progressWrap.appendChild(downFill);
@@ -376,11 +380,6 @@ export class ActivityLog {
     if (isPreview) {
       links.appendChild(makeVoteBtn('up'));
       links.appendChild(makeVoteBtn('down'));
-    } else {
-      const votingNote = document.createElement('span');
-      votingNote.style.cssText = 'font-size: 9px; color: #666; font-style: italic;';
-      votingNote.textContent = 'Vote from preview';
-      links.appendChild(votingNote);
     }
     entry.appendChild(links);
     return entry;
