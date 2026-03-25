@@ -25,6 +25,10 @@ export class LeaderboardPanel {
   private highScoresSection: HTMLDivElement;
   private timer: ReturnType<typeof setInterval> | null = null;
   private playerName: string;
+  private showAll = false;
+  private lastEntries: LeaderboardEntry[] = [];
+  private lastAllTime: LeaderboardEntry[] = [];
+  private toggleLabel!: HTMLSpanElement;
   onBless: BlessCallback | null = null;
 
   constructor(playerName: string) {
@@ -46,15 +50,35 @@ export class LeaderboardPanel {
       overflow: hidden;
     `;
 
-    const title = document.createElement('div');
-    title.textContent = 'Leaderboard';
-    title.style.cssText = `
-      color: #ffd700; font-size: 18px; font-weight: bold;
-      text-align: center; padding: 16px 12px 12px;
+    const header = document.createElement('div');
+    header.style.cssText = `
+      padding: 16px 12px 12px;
       border-bottom: 1px solid rgba(255, 215, 0, 0.3);
       flex-shrink: 0;
+      text-align: center;
     `;
-    this.container.appendChild(title);
+
+    const title = document.createElement('div');
+    title.textContent = 'Leaderboard';
+    title.style.cssText = `color: #ffd700; font-size: 18px; font-weight: bold;`;
+    header.appendChild(title);
+
+    // Toggle: show all / active only
+    const toggle = document.createElement('div');
+    toggle.style.cssText = `
+      margin-top: 8px; cursor: pointer; font-size: 10px;
+      color: rgba(255, 215, 0, 0.5);
+    `;
+    this.toggleLabel = document.createElement('span');
+    this.toggleLabel.textContent = 'Show all players';
+    toggle.appendChild(this.toggleLabel);
+    toggle.addEventListener('click', () => {
+      this.showAll = !this.showAll;
+      this.toggleLabel.textContent = this.showAll ? 'Show active only' : 'Show all players';
+      this.render(this.lastEntries, this.lastAllTime);
+    });
+    header.appendChild(toggle);
+    this.container.appendChild(header);
 
     this.list = document.createElement('div');
     this.list.style.cssText = `padding: 8px 12px; overflow-y: auto; flex: 1;`;
@@ -122,18 +146,21 @@ export class LeaderboardPanel {
   }
 
   private render(entries: LeaderboardEntry[], allTime: LeaderboardEntry[]): void {
+    this.lastEntries = entries;
+    this.lastAllTime = allTime;
     this.list.innerHTML = '';
     this.highScoresSection.innerHTML = '';
 
-    if (entries.length === 0) {
+    const filtered = this.showAll ? entries : entries.filter((e) => isActive(e));
+
+    if (filtered.length === 0) {
       const empty = document.createElement('div');
-      empty.textContent = 'No scores yet. Be the first!';
+      empty.textContent = this.showAll ? 'No scores yet. Be the first!' : 'No active players right now.';
       empty.style.cssText = `color: #888; font-size: 13px; text-align: center; padding: 24px 0;`;
       this.list.appendChild(empty);
-      return;
     }
 
-    entries.forEach((entry, i) => {
+    filtered.forEach((entry, i) => {
       this.list.appendChild(this.makeRow(entry, i, `${i + 1}.`));
     });
 
