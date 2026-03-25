@@ -6,7 +6,7 @@ interface SaveData {
   state: GameState;
 }
 
-export const CURRENT_VERSION = 7;
+export const CURRENT_VERSION = 8;
 
 export function serialize(state: GameState): string {
   const saveData: SaveData = {
@@ -82,6 +82,12 @@ function migrate(saveData: SaveData): SaveData {
     if (s.autoFeedThreshold === undefined) s.autoFeedThreshold = 50;
     if (s.autoRepairThreshold === undefined) s.autoRepairThreshold = 50;
     saveData.version = 7;
+  }
+
+  if (saveData.version < 8) {
+    const s = saveData.state as any;
+    if (s.activeBlessings === undefined) s.activeBlessings = [];
+    saveData.version = 8;
   }
 
   return saveData;

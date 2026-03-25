@@ -10,6 +10,7 @@ import * as enlightenmentSystem from '../systems/enlightenmentSystem';
 import * as lifeEventsSystem from '../systems/lifeEventsSystem';
 import type { LifeEventResult } from '../systems/lifeEventsSystem';
 import { getSoulUpgradeLevel } from '../systems/upgradeSystem';
+import * as blessingsSystem from '../systems/blessingsSystem';
 
 export class GameEngine {
   state: GameState;
@@ -66,6 +67,9 @@ export class GameEngine {
 
     wealthSystem.update(dt, this.state);
     karmaSystem.update(dt, this.state);
+
+    // Tick down active blessings
+    blessingsSystem.update(dt, this.state);
 
     // Enlightenment milestones + nirvana challenge timer
     enlightenmentSystem.update(dt, this.state, this.events);

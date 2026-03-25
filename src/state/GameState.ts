@@ -21,6 +21,12 @@ export interface VictoryStats {
   finalLifeTime: number;
 }
 
+export interface ActiveBlessing {
+  type: 'nourish' | 'inspire' | 'protect';
+  fromName: string;
+  remaining: number; // seconds left
+}
+
 export interface GameState {
   playerName: string;
 
@@ -57,6 +63,9 @@ export interface GameState {
 
   // Karma milestone celebration tracking
   lastCelebratedKarmaMilestone: number;
+
+  // Active blessings (temporary buffs from other players)
+  activeBlessings: ActiveBlessing[];
 
   totalPlayTime: number;
   lastSaveTimestamp: number;

@@ -39,6 +39,8 @@ export function createDefaultState(): GameState {
 
     lastCelebratedKarmaMilestone: 0,
 
+    activeBlessings: [],
+
     totalPlayTime: 0,
     lastSaveTimestamp: Date.now(),
     version: 1,

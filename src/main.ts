@@ -10,6 +10,8 @@ import { showNamePrompt } from './ui/components/NamePrompt';
 import { LeaderboardPanel } from './ui/components/LeaderboardPanel';
 import { VersionChecker } from './ui/VersionChecker';
 import { loadAvatarLocal } from './ui/avatarUtils';
+import { BLESSING_INFO, applyBlessing } from './systems/blessingsSystem';
+import type { BlessingType } from './systems/blessingsSystem';
 
 async function main() {
   const app = new Application();
@@ -63,6 +65,53 @@ async function main() {
   const leaderboard = new LeaderboardPanel(engine.state.playerName);
   leaderboard.updateLayout(layout.leftPanel);
   leaderboard.start();
+
+  // Bless other players from leaderboard
+  leaderboard.onBless = async (toName, type) => {
+    const s = engine.state;
+    const cost = BLESSING_INFO[type as BlessingType].cost;
+    if (s.wealth < cost) {
+      scene.showToast(`Not enough wealth (need ${cost})`);
+      return;
+    }
+    try {
+      const res = await fetch('/.netlify/functions/bless', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: s.playerName, to: toName, type }),
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string; cost?: number; karmaReward?: number };
+      if (data.success) {
+        s.wealth -= cost;
+        s.currentKarma += data.karmaReward ?? 0;
+        scene.showToast(`Blessed ${toName} with ${BLESSING_INFO[type as BlessingType].label}! +${data.karmaReward} karma`);
+      } else {
+        scene.showToast(data.error ?? 'Blessing failed');
+      }
+    } catch {
+      scene.showToast('Network error');
+    }
+  };
+
+  // Poll for incoming blessings every 30s
+  const pollBlessings = async () => {
+    const name = engine.state.playerName;
+    if (!name) return;
+    try {
+      const res = await fetch(`/.netlify/functions/bless?player=${encodeURIComponent(name)}`);
+      if (!res.ok) return;
+      const blessings = (await res.json()) as { from_name: string; type: string }[];
+      for (const b of blessings) {
+        const type = b.type as BlessingType;
+        if (BLESSING_INFO[type]) {
+          applyBlessing(engine.state, type, b.from_name);
+          scene.showToast(`${b.from_name} blessed you with ${BLESSING_INFO[type].label}!`);
+        }
+      }
+    } catch { /* silent */ }
+  };
+  setInterval(pollBlessings, 30_000);
+  pollBlessings(); // check on load
 
   // Sync name changes to leaderboard
   scene.onNameChange = (newName) => {

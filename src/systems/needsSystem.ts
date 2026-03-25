@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import type { GameState } from '../state/GameState';
 import { clamp } from '../utils/math';
 import { getSoulUpgradeLevel } from './upgradeSystem';
+import { getNeedDrainMultiplier, getHealthFloor } from './blessingsSystem';
 
 export function update(dt: number, state: GameState): void {
   if (!state.isAlive) return;
@@ -9,10 +10,11 @@ export function update(dt: number, state: GameState): void {
   const lifeMinutes = state.lifeTimeElapsed / 60;
   const resilientLevel = getSoulUpgradeLevel(state, 'resilient_body');
   const drainReduction = 1 - resilientLevel * 0.1;
+  const blessingDrainMult = getNeedDrainMultiplier(state);
 
   // Hunger drain
   const hungerCfg = CONFIG.needs.hunger;
-  let hungerDrain = (hungerCfg.baseDrain + hungerCfg.drainScaling * lifeMinutes) * drainReduction;
+  let hungerDrain = (hungerCfg.baseDrain + hungerCfg.drainScaling * lifeMinutes) * drainReduction * blessingDrainMult;
   if (state.lifeUpgrades.some((u) => u.id === 'better_farm' && u.purchased)) {
     hungerDrain *= 0.8;
   }
@@ -20,7 +22,7 @@ export function update(dt: number, state: GameState): void {
 
   // Shelter drain
   const shelterCfg = CONFIG.needs.shelter;
-  let shelterDrain = (shelterCfg.baseDrain + shelterCfg.drainScaling * lifeMinutes) * drainReduction;
+  let shelterDrain = (shelterCfg.baseDrain + shelterCfg.drainScaling * lifeMinutes) * drainReduction * blessingDrainMult;
   if (state.lifeUpgrades.some((u) => u.id === 'sturdy_walls' && u.purchased)) {
     shelterDrain *= 0.8;
   }
@@ -47,7 +49,8 @@ export function update(dt: number, state: GameState): void {
     healthDelta += regenRate;
   }
 
-  state.needs.health = clamp(state.needs.health + healthDelta * dt, 0, 100);
+  const healthFloor = getHealthFloor(state);
+  state.needs.health = clamp(state.needs.health + healthDelta * dt, healthFloor, 100);
 }
 
 export function getHungerDrainRate(state: GameState): number {
