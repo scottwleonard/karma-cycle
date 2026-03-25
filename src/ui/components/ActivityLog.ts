@@ -198,6 +198,7 @@ export class ActivityLog {
         return;
       }
 
+      const preview = isPreviewDeploy();
       const header = document.createElement('div');
       header.style.cssText = `
         padding: 12px 12px 8px;
@@ -206,14 +207,14 @@ export class ActivityLog {
         border-bottom: 1px solid rgba(255, 215, 0, 0.08);
         flex-shrink: 0;
       `;
-      header.textContent = isPreview
+      header.textContent = preview
         ? `${VOTES_TO_MERGE} 👍 to ship · ${VOTES_TO_REJECT} 👎 to reject`
         : 'Proposed changes — vote from preview';
       this.communityPanel.appendChild(header);
 
       for (const pr of prs) {
         const prVotes = votes[pr.number] ?? { up: 0, down: 0, upVoters: [], downVoters: [] };
-        this.communityPanel.appendChild(this.makeCommunityEntry(pr, prVotes));
+        this.communityPanel.appendChild(this.makeCommunityEntry(pr, prVotes, preview));
       }
 
     } catch {
@@ -225,7 +226,7 @@ export class ActivityLog {
     }
   }
 
-  private makeCommunityEntry(issue: OpenPR, votes: VoteInfo): HTMLDivElement {
+  private makeCommunityEntry(issue: OpenPR, votes: VoteInfo, isPreview: boolean): HTMLDivElement {
     const entry = document.createElement('div');
     entry.style.cssText = `
       padding: 8px 12px;
@@ -276,8 +277,6 @@ export class ActivityLog {
 
     const links = document.createElement('div');
     links.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; align-items: center;';
-
-    const isPreview = isPreviewDeploy();
 
     // Show preview link only on prod (you're already on the preview in preview envs)
     if (!isPreview) {
