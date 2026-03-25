@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import type { GameState } from '../state/GameState';
 import { getSoulUpgradeLevel } from './upgradeSystem';
 import { LIFE_UPGRADES } from '../types/upgrades';
+import { getKarmaMultiplier as getBlessingKarmaMultiplier } from './blessingsSystem';
 
 export function getKarmaPerSecond(state: GameState): number {
   if (!state.isAlive) return 0;
@@ -48,7 +49,10 @@ export function getKarmaPerSecond(state: GameState): number {
       ? 1 + Math.sqrt(state.bankedKarma) * CONFIG.karmaBank.coefficient
       : 1;
 
-  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier * bankMultiplier;
+  // Social blessing bonus (inspire = 2x)
+  const blessingMultiplier = getBlessingKarmaMultiplier(state);
+
+  return cfg.baseRate * lifeTimeMultiplier * soulMultiplier * state.karmaMultiplier * upgradeMultiplier * bankMultiplier * blessingMultiplier;
 }
 
 /**

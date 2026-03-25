@@ -1250,6 +1250,10 @@ export class GameScene extends Container {
     this.mandala.setThemeColor(theme.mandalaColor);
   }
 
+  showToast(message: string): void {
+    this.toastManager.show({ message });
+  }
+
   updateActivityLogLayout(layout: import('../layout').LayoutInfo): void {
     this.activityLog.updatePosition(layout);
   }

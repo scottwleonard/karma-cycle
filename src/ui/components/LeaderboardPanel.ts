@@ -8,7 +8,16 @@ interface LeaderboardEntry {
   lives: number;
   tier: number;
   avatar?: string | null;
+  updated_at?: string;
 }
+
+function isActive(entry: LeaderboardEntry): boolean {
+  if (!entry.updated_at) return false;
+  const age = (Date.now() - new Date(entry.updated_at).getTime()) / 1000;
+  return age < 60;
+}
+
+export type BlessCallback = (toName: string, type: 'nourish' | 'inspire' | 'protect') => void;
 
 export class LeaderboardPanel {
   private container: HTMLDivElement;
@@ -16,6 +25,7 @@ export class LeaderboardPanel {
   private highScoresSection: HTMLDivElement;
   private timer: ReturnType<typeof setInterval> | null = null;
   private playerName: string;
+  onBless: BlessCallback | null = null;
 
   constructor(playerName: string) {
     this.playerName = playerName;
@@ -194,7 +204,101 @@ export class LeaderboardPanel {
     row.appendChild(rank);
     row.appendChild(avatarEl);
     row.appendChild(info);
+
+    // Active indicator (green dot)
+    if (isActive(entry) && !isPlayer) {
+      const dot = document.createElement('span');
+      dot.style.cssText = `
+        width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        background: #22dd77; box-shadow: 0 0 4px #22dd77;
+      `;
+      dot.title = 'Online';
+      row.appendChild(dot);
+    }
+
+    // Bless button (only for other active players)
+    if (!isPlayer && isActive(entry) && this.onBless) {
+      const blessBtn = document.createElement('div');
+      blessBtn.textContent = '🙏';
+      blessBtn.title = `Bless ${entry.name}`;
+      blessBtn.style.cssText = `
+        cursor: pointer; font-size: 14px; flex-shrink: 0;
+        padding: 4px; border-radius: 4px; opacity: 0.5;
+        transition: opacity 0.15s;
+      `;
+      blessBtn.addEventListener('mouseenter', () => { blessBtn.style.opacity = '1'; });
+      blessBtn.addEventListener('mouseleave', () => {
+        if (!blessBtn.dataset.open) blessBtn.style.opacity = '0.5';
+      });
+      blessBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.showBlessMenu(blessBtn, entry.name);
+      });
+      row.appendChild(blessBtn);
+    }
+
     return row;
+  }
+
+  private showBlessMenu(anchor: HTMLElement, targetName: string): void {
+    document.querySelectorAll('.bless-menu').forEach((el) => el.remove());
+
+    const menu = document.createElement('div');
+    menu.className = 'bless-menu';
+    menu.style.cssText = `
+      position: fixed; background: rgba(10, 10, 46, 0.98);
+      border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 8px;
+      padding: 8px; z-index: 9999; font-family: monospace;
+      min-width: 180px; box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    `;
+
+    const title = document.createElement('div');
+    title.textContent = `Bless ${targetName}`;
+    title.style.cssText = `
+      color: #ffd700; font-size: 11px; font-weight: bold;
+      padding: 4px 8px 8px; border-bottom: 1px solid rgba(255,215,0,0.1);
+      margin-bottom: 4px;
+    `;
+    menu.appendChild(title);
+
+    const options: { type: 'nourish' | 'inspire' | 'protect'; label: string; cost: number }[] = [
+      { type: 'nourish', label: '🍚 Nourish — pause drain', cost: 50 },
+      { type: 'inspire', label: '✨ Inspire — 2x karma', cost: 100 },
+      { type: 'protect', label: '🛡 Protect — health floor', cost: 75 },
+    ];
+
+    for (const opt of options) {
+      const item = document.createElement('div');
+      item.innerHTML = `${opt.label} <span style="color:#22dd77;font-size:10px">${opt.cost}w</span>`;
+      item.style.cssText = `
+        padding: 8px; cursor: pointer; border-radius: 4px;
+        color: #ccc; font-size: 12px; transition: background 0.1s;
+      `;
+      item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,215,0,0.1)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = ''; });
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.remove();
+        anchor.dataset.open = '';
+        this.onBless?.(targetName, opt.type);
+      });
+      menu.appendChild(item);
+    }
+
+    const rect = anchor.getBoundingClientRect();
+    menu.style.top = `${rect.bottom + 4}px`;
+    menu.style.right = `${window.innerWidth - rect.right}px`;
+    document.body.appendChild(menu);
+    anchor.dataset.open = '1';
+
+    const close = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) {
+        menu.remove();
+        anchor.dataset.open = '';
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
   }
 
   private renderAllTimeHighScores(allTime: LeaderboardEntry[]): void {
