@@ -25,6 +25,8 @@ export function createDefaultState(): GameState {
 
     autoFeedEnabled: true,
     autoRepairEnabled: true,
+    autoFeedThreshold: 50,
+    autoRepairThreshold: 50,
 
     bankedKarma: 0,
 

@@ -99,6 +99,8 @@ export class GameScene extends Container {
   // Auto toggles
   private autoFeedToggle!: Container;
   private autoRepairToggle!: Container;
+  private autoFeedThresholdControl!: Container;
+  private autoRepairThresholdControl!: Container;
 
   // Inline upgrade rows (game view)
   private upgradeRows: UpgradeRow[] = [];
@@ -611,8 +613,50 @@ export class GameScene extends Container {
     this.autoRepairToggle.visible = false;
     this.gameView.addChild(this.autoRepairToggle);
 
+    // Threshold steppers (hidden until soul upgrade purchased)
+    const thresholdY = toggleY + 36 + 8;
+    this.autoFeedThresholdControl = this.buildThresholdStepper(
+      CONFIG.display.hungerColor,
+      () => {
+        this.engine.state.autoFeedThreshold = Math.max(
+          20,
+          this.engine.state.autoFeedThreshold - 10,
+        );
+      },
+      () => {
+        this.engine.state.autoFeedThreshold = Math.min(
+          80,
+          this.engine.state.autoFeedThreshold + 10,
+        );
+      },
+    );
+    this.autoFeedThresholdControl.x = GM;
+    this.autoFeedThresholdControl.y = thresholdY;
+    this.autoFeedThresholdControl.visible = false;
+    this.gameView.addChild(this.autoFeedThresholdControl);
+
+    this.autoRepairThresholdControl = this.buildThresholdStepper(
+      CONFIG.display.shelterColor,
+      () => {
+        this.engine.state.autoRepairThreshold = Math.max(
+          20,
+          this.engine.state.autoRepairThreshold - 10,
+        );
+      },
+      () => {
+        this.engine.state.autoRepairThreshold = Math.min(
+          80,
+          this.engine.state.autoRepairThreshold + 10,
+        );
+      },
+    );
+    this.autoRepairThresholdControl.x = GM + btnW + btnGap;
+    this.autoRepairThresholdControl.y = thresholdY;
+    this.autoRepairThresholdControl.visible = false;
+    this.gameView.addChild(this.autoRepairThresholdControl);
+
     // === INLINE UPGRADE SHOP — only unpurchased upgrades shown ===
-    const shopY = toggleY + 32 + 64; // toggle height + 64px gap
+    const shopY = thresholdY + 36 + 28; // threshold row height + gap
 
     this.upgradeHeader = new Text({
       text: '— Upgrades —',
@@ -902,6 +946,77 @@ export class GameScene extends Container {
     bg.fill({ color: baseColor, alpha: enabled ? 0.25 : 0.08 });
     bg.roundRect(0, 0, width, height, 6);
     bg.stroke({ color: baseColor, alpha: enabled ? 0.5 : 0.15, width: 1 });
+  }
+
+  private buildThresholdStepper(
+    color: number,
+    onDecrement: () => void,
+    onIncrement: () => void,
+  ): Container {
+    const stepper = new Container();
+    const width = 230;
+    const height = 32;
+
+    const bg = new Graphics();
+    bg.roundRect(0, 0, width, height, 6);
+    bg.fill({ color, alpha: 0.15 });
+    bg.roundRect(0, 0, width, height, 6);
+    bg.stroke({ color, alpha: 0.3, width: 1 });
+    stepper.addChild(bg);
+
+    // Decrement button
+    const decBtn = new Container();
+    decBtn.eventMode = 'static';
+    decBtn.cursor = 'pointer';
+    const decBg = new Graphics();
+    decBg.roundRect(0, 0, 36, height, 6);
+    decBg.fill({ color, alpha: 0.2 });
+    decBtn.addChild(decBg);
+    const decLabel = new Text({
+      text: '−',
+      style: { fontFamily: 'monospace', fontSize: 22, fill: 0xeeeeee },
+    });
+    decLabel.x = 10;
+    decLabel.y = 3;
+    decBtn.addChild(decLabel);
+    decBtn.on('pointertap', onDecrement);
+    stepper.addChild(decBtn);
+
+    // Increment button
+    const incBtn = new Container();
+    incBtn.eventMode = 'static';
+    incBtn.cursor = 'pointer';
+    const incBg = new Graphics();
+    incBg.roundRect(0, 0, 36, height, 6);
+    incBg.fill({ color, alpha: 0.2 });
+    incBtn.addChild(incBg);
+    const incLabel = new Text({
+      text: '+',
+      style: { fontFamily: 'monospace', fontSize: 22, fill: 0xeeeeee },
+    });
+    incLabel.x = 9;
+    incLabel.y = 3;
+    incBtn.addChild(incLabel);
+    incBtn.x = width - 36;
+    incBtn.on('pointertap', onIncrement);
+    stepper.addChild(incBtn);
+
+    // Value text (centered)
+    const valueText = new Text({
+      text: 'below 50%',
+      style: { fontFamily: 'monospace', fontSize: 16, fill: 0xdddddd },
+    });
+    valueText.x = 38;
+    valueText.y = (height - 16) / 2;
+    stepper.addChild(valueText);
+    (stepper as any)._valueText = valueText;
+
+    return stepper;
+  }
+
+  private updateThresholdStepper(stepper: Container, threshold: number): void {
+    const valueText = (stepper as any)._valueText as Text;
+    valueText.text = `below ${threshold}%`;
   }
 
   private buildSoulView(gw: number): void {
@@ -1219,11 +1334,15 @@ export class GameScene extends Container {
     const hasAutoRepair = getSoulUpgradeLevel(state, 'auto_repair') > 0;
     this.autoFeedToggle.visible = hasAutoFeed;
     this.autoRepairToggle.visible = hasAutoRepair;
+    this.autoFeedThresholdControl.visible = hasAutoFeed;
+    this.autoRepairThresholdControl.visible = hasAutoRepair;
     if (hasAutoFeed) {
       this.updateToggle(this.autoFeedToggle, state.autoFeedEnabled);
+      this.updateThresholdStepper(this.autoFeedThresholdControl, state.autoFeedThreshold);
     }
     if (hasAutoRepair) {
       this.updateToggle(this.autoRepairToggle, state.autoRepairEnabled);
+      this.updateThresholdStepper(this.autoRepairThresholdControl, state.autoRepairThreshold);
     }
 
     // Inline upgrade shop — rebuild layout (only unpurchased shown)
