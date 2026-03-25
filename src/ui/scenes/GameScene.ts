@@ -1214,6 +1214,13 @@ export class GameScene extends Container {
 
     const continueBtn = new ActionButton('Continue Playing', 400, 80, 0x446644, () => {
       this.victoryOverlay.visible = false;
+      // If the player is dead (died during/after nirvana), revive them
+      if (!this.engine.state.isAlive) {
+        performDeathRebirth(this.engine.state, this.engine.events);
+        this.deathOverlay.visible = false;
+        resetLifeEvents();
+        this.eventLog.clear();
+      }
     });
     continueBtn.x = gw / 2 - 200;
     continueBtn.y = 950;
