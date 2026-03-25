@@ -88,6 +88,24 @@ const handler: Handler = async (event) => {
     const karmaReward = SENDER_KARMA_REWARD[type];
 
     try {
+      // Check if the recipient is actively playing (updated within last 60s)
+      const { data: recipient } = await supabase
+        .from('leaderboard')
+        .select('updated_at')
+        .eq('instance', instance)
+        .eq('name', to)
+        .single();
+
+      if (!recipient) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Player not found' }) };
+      }
+
+      const lastSeen = new Date(recipient.updated_at).getTime();
+      const ageSeconds = (Date.now() - lastSeen) / 1000;
+      if (ageSeconds > 60) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Player is not online' }) };
+      }
+
       // Insert the blessing
       const { error } = await supabase
         .from('blessings')

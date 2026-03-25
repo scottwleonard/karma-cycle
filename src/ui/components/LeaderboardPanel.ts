@@ -8,6 +8,13 @@ interface LeaderboardEntry {
   lives: number;
   tier: number;
   avatar?: string | null;
+  updated_at?: string;
+}
+
+function isActive(entry: LeaderboardEntry): boolean {
+  if (!entry.updated_at) return false;
+  const age = (Date.now() - new Date(entry.updated_at).getTime()) / 1000;
+  return age < 60;
 }
 
 export type BlessCallback = (toName: string, type: 'nourish' | 'inspire' | 'protect') => void;
@@ -198,8 +205,19 @@ export class LeaderboardPanel {
     row.appendChild(avatarEl);
     row.appendChild(info);
 
-    // Bless button (only for other players)
-    if (!isPlayer && this.onBless) {
+    // Active indicator (green dot)
+    if (isActive(entry) && !isPlayer) {
+      const dot = document.createElement('span');
+      dot.style.cssText = `
+        width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        background: #22dd77; box-shadow: 0 0 4px #22dd77;
+      `;
+      dot.title = 'Online';
+      row.appendChild(dot);
+    }
+
+    // Bless button (only for other active players)
+    if (!isPlayer && isActive(entry) && this.onBless) {
       const blessBtn = document.createElement('div');
       blessBtn.textContent = '🙏';
       blessBtn.title = `Bless ${entry.name}`;
