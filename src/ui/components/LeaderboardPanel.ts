@@ -4,6 +4,7 @@ const POLL_INTERVAL = 10_000;
 interface LeaderboardEntry {
   name: string;
   karma: number;
+  wealth: number;
   lives: number;
   tier: number;
   avatar?: string | null;
@@ -83,12 +84,12 @@ export class LeaderboardPanel {
   }
 
   /** Submit player score and refresh the display */
-  async submitScore(karma: number, lives: number, tier: number, avatar?: string | null): Promise<void> {
+  async submitScore(karma: number, wealth: number, lives: number, tier: number, avatar?: string | null): Promise<void> {
     try {
       const res = await fetch('/.netlify/functions/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: this.playerName, karma, lives, tier, ...(avatar && { avatar }) }),
+        body: JSON.stringify({ name: this.playerName, karma, wealth, lives, tier, ...(avatar && { avatar }) }),
       });
       if (!res.ok) {
         console.error('Leaderboard submit failed:', res.status, await res.text());
@@ -185,7 +186,7 @@ export class LeaderboardPanel {
     if (TIER_NAMES[entry.tier]) nameRow.appendChild(tierIcon);
 
     const karma = document.createElement('div');
-    karma.textContent = `${formatKarma(entry.karma)} karma · ${entry.lives} lives`;
+    karma.textContent = `${formatNum(entry.karma)} karma · ${formatNum(entry.wealth ?? 0)} wealth · ${entry.lives} lives`;
     karma.style.cssText = `font-size: 11px; color: #888; margin-top: 2px;`;
 
     info.appendChild(nameRow);
@@ -224,7 +225,9 @@ export class LeaderboardPanel {
   }
 }
 
-function formatKarma(n: number): string {
+function formatNum(n: number): string {
+  if (n >= 1_000_000_000_000) return `${(n / 1_000_000_000_000).toFixed(1)}T`;
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(Math.floor(n));

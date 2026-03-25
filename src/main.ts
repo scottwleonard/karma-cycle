@@ -75,8 +75,8 @@ async function main() {
     if (!s.playerName) return;
     const avatar = loadAvatarLocal();
     const totalKarma = Math.floor(s.karma + s.currentKarma);
-    console.log(`[leaderboard] submitting: ${s.playerName} karma=${totalKarma}`);
-    leaderboard.submitScore(totalKarma, s.lifeNumber, s.enlightenmentTier, avatar);
+    const wealth = Math.floor(s.wealth);
+    leaderboard.submitScore(totalKarma, wealth, s.lifeNumber, s.enlightenmentTier, avatar);
   };
 
   // Game loop

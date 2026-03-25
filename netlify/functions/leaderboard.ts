@@ -43,13 +43,13 @@ const handler: Handler = async (event) => {
       const [activeRes, allTimeRes] = await Promise.all([
         supabase
           .from('leaderboard')
-          .select('name, karma, lives, tier, avatar, updated_at')
+          .select('name, karma, wealth, lives, tier, avatar, updated_at')
           .eq('instance', instance)
           .order('karma', { ascending: false })
           .limit(MAX_ENTRIES),
         supabase
           .from('leaderboard')
-          .select('name, peak_karma, lives, tier, avatar')
+          .select('name, peak_karma, peak_wealth, lives, tier, avatar')
           .eq('instance', instance)
           .order('peak_karma', { ascending: false })
           .limit(3),
@@ -60,7 +60,7 @@ const handler: Handler = async (event) => {
         statusCode: 200, headers,
         body: JSON.stringify({
           active: activeRes.data ?? [],
-          allTime: (allTimeRes.data ?? []).map((r) => ({ name: r.name, karma: r.peak_karma, lives: r.lives, tier: r.tier, avatar: r.avatar })),
+          allTime: (allTimeRes.data ?? []).map((r) => ({ name: r.name, karma: r.peak_karma, wealth: r.peak_wealth, lives: r.lives, tier: r.tier, avatar: r.avatar })),
         }),
       };
     } catch (e) {
@@ -70,7 +70,7 @@ const handler: Handler = async (event) => {
 
   // POST — submit/update score for this instance
   if (event.httpMethod === 'POST') {
-    let body: { name?: string; karma?: number; lives?: number; tier?: number; avatar?: string };
+    let body: { name?: string; karma?: number; wealth?: number; lives?: number; tier?: number; avatar?: string };
     try {
       body = JSON.parse(event.body || '{}');
     } catch {
@@ -83,31 +83,33 @@ const handler: Handler = async (event) => {
     }
 
     const karma = Math.floor(body.karma ?? 0);
+    const wealth = Math.floor(body.wealth ?? 0);
     const lives = Math.floor(body.lives ?? 0);
     const tier = Math.floor(body.tier ?? 0);
     const avatar = body.avatar ?? undefined;
 
-    if (karma < 0 || lives < 0 || tier < 0) {
+    if (karma < 0 || wealth < 0 || lives < 0 || tier < 0) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid values' }) };
     }
 
     try {
       const supabase = getSupabase();
 
-      // Fetch existing peak to preserve it
+      // Fetch existing peaks to preserve them
       const { data: existing } = await supabase
         .from('leaderboard')
-        .select('peak_karma')
+        .select('peak_karma, peak_wealth')
         .eq('instance', instance)
         .eq('name', name)
         .single();
 
       const peakKarma = Math.max(karma, existing?.peak_karma ?? 0);
+      const peakWealth = Math.max(wealth, existing?.peak_wealth ?? 0);
 
       const { error } = await supabase
         .from('leaderboard')
         .upsert(
-          { instance, name, karma, lives, tier, peak_karma: peakKarma, ...(avatar !== undefined && { avatar }), updated_at: new Date().toISOString() },
+          { instance, name, karma, wealth, lives, tier, peak_karma: peakKarma, peak_wealth: peakWealth, ...(avatar !== undefined && { avatar }), updated_at: new Date().toISOString() },
           { onConflict: 'instance,name' },
         );
 
