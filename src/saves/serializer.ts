@@ -6,7 +6,7 @@ interface SaveData {
   state: GameState;
 }
 
-export const CURRENT_VERSION = 8;
+export const CURRENT_VERSION = 9;
 
 export function serialize(state: GameState): string {
   const saveData: SaveData = {
@@ -88,6 +88,13 @@ function migrate(saveData: SaveData): SaveData {
     const s = saveData.state as any;
     if (s.activeBlessings === undefined) s.activeBlessings = [];
     saveData.version = 8;
+  }
+
+  if (saveData.version < 9) {
+    const s = saveData.state as any;
+    // Default to wealth focus (preserves existing behavior for players who already bought material upgrades)
+    if (s.wealthFocusMode === undefined) s.wealthFocusMode = true;
+    saveData.version = 9;
   }
 
   return saveData;

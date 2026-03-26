@@ -19,10 +19,12 @@ export function getKarmaPerSecond(state: GameState): number {
 
   // Apply karma multipliers from all purchased life upgrades
   // This handles both spiritual (+karma) and material (-karma) upgrades
+  // In karma focus mode, material upgrade karma penalties are suspended
   for (const u of state.lifeUpgrades) {
     if (!u.purchased) continue;
     const def = LIFE_UPGRADES.find((d) => d.id === u.id);
     if (def?.karmaMultiplier !== undefined) {
+      if (def.category === 'material' && !state.wealthFocusMode) continue;
       upgradeMultiplier *= def.karmaMultiplier;
     }
   }
@@ -60,6 +62,8 @@ export function getKarmaPerSecond(state: GameState): number {
  * This is separate from the rate multiplier — it directly subtracts karma.
  */
 export function getKarmaDrainPerSecond(state: GameState): number {
+  // In karma focus mode, material upgrade drains are suspended
+  if (!state.wealthFocusMode) return 0;
   let drain = 0;
   for (const u of state.lifeUpgrades) {
     if (!u.purchased) continue;

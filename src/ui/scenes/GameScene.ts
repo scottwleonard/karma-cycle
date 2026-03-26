@@ -96,6 +96,9 @@ export class GameScene extends Container {
   private deathOverlay!: Container;
   private deathSubtext!: Text;
 
+  // Focus mode toggle
+  private focusModeToggle!: Container;
+
   // Auto toggles
   private autoFeedToggle!: Container;
   private autoRepairToggle!: Container;
@@ -671,6 +674,15 @@ export class GameScene extends Container {
     this.upgradeHeader.x = gw / 2;
     this.upgradeHeader.y = shopY;
     this.gameView.addChild(this.upgradeHeader);
+
+    // Focus mode toggle — appears to the right of the upgrade header when material upgrades are owned
+    this.focusModeToggle = this.buildToggle('Karma Focus', 0x7799ff, () => {
+      this.engine.state.wealthFocusMode = !this.engine.state.wealthFocusMode;
+    });
+    this.focusModeToggle.x = gw - GM - 230;
+    this.focusModeToggle.y = shopY - 2;
+    this.focusModeToggle.visible = false;
+    this.gameView.addChild(this.focusModeToggle);
 
     this.upgradeContainerBaseY = shopY + 32;
     this.upgradeContainer = new Container();
@@ -1354,6 +1366,17 @@ export class GameScene extends Container {
     if (hasAutoRepair) {
       this.updateToggle(this.autoRepairToggle, state.autoRepairEnabled);
       this.updateThresholdStepper(this.autoRepairThresholdControl, state.autoRepairThreshold);
+    }
+
+    // Focus mode toggle — visible when at least one material upgrade is purchased
+    const hasMaterialUpgrade = state.lifeUpgrades.some((u) => {
+      if (!u.purchased) return false;
+      const def = LIFE_UPGRADES.find((d) => d.id === u.id);
+      return def?.category === 'material';
+    });
+    this.focusModeToggle.visible = hasMaterialUpgrade;
+    if (hasMaterialUpgrade) {
+      this.updateToggle(this.focusModeToggle, !state.wealthFocusMode);
     }
 
     // Inline upgrade shop — rebuild layout (only unpurchased shown)

@@ -67,6 +67,10 @@ export interface GameState {
   // Active blessings (temporary buffs from other players)
   activeBlessings: ActiveBlessing[];
 
+  // Focus mode: true = wealth focus (material upgrades fully active),
+  // false = karma focus (material upgrade karma penalties suspended, wealth bonuses also suspended)
+  wealthFocusMode: boolean;
+
   totalPlayTime: number;
   lastSaveTimestamp: number;
   version: number;
