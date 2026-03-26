@@ -41,6 +41,8 @@ export function createDefaultState(): GameState {
 
     activeBlessings: [],
 
+    wealthFocusMode: true,
+
     totalPlayTime: 0,
     lastSaveTimestamp: Date.now(),
     version: 1,
