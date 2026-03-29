@@ -21,6 +21,7 @@ import { showNamePrompt } from '../components/NamePrompt';
 import { ProfileMenu } from '../components/ProfileMenu';
 import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
+import { QuestPanel } from '../components/QuestPanel';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
 import { getWealthPerSecond } from '../../systems/wealthSystem';
 import { getFeedCost, getRepairCost } from '../../systems/needsSystem';
@@ -45,7 +46,7 @@ import {
   getSoulUpgradeLevel,
 } from '../../systems/upgradeSystem';
 
-type TabName = 'game' | 'soul';
+type TabName = 'game' | 'soul' | 'quests';
 
 // Compact upgrade row shown inline on the game screen
 interface UpgradeRow {
@@ -85,11 +86,13 @@ export class GameScene extends Container {
   private rebirthButton!: ActionButton;
   private continueButton: ActionButton | null = null;
 
-  // Tabs — just Game and Soul now
+  // Tabs — Game, Soul, Quests
   private currentTab: TabName = 'game';
   private tabContainer!: Container;
   private gameView!: Container;
   private soulView!: Container;
+  private questsView!: Container;
+  private questPanel!: QuestPanel;
   private tabButtons: ActionButton[] = [];
 
   // Death overlay
@@ -328,17 +331,18 @@ export class GameScene extends Container {
 
     this.buildGameView(gw);
     this.buildSoulView(gw);
+    this.buildQuestsView(gw);
 
     this.tabContainer.addChild(this.gameView);
 
-    // === TAB BUTTONS (just 2 now) ===
+    // === TAB BUTTONS (3: Game, Soul, Quests) ===
     const tabY = 1800;
-    const tabWidth = (gw - 60) / 2;
-    const tabNames: TabName[] = ['game', 'soul'];
-    const tabLabels = ['Game', 'Soul'];
-    const tabColors = [0x404488, 0x884444];
+    const tabWidth = (gw - 80) / 3;
+    const tabNames: TabName[] = ['game', 'soul', 'quests'];
+    const tabLabels = ['Game', 'Soul', 'Quests'];
+    const tabColors = [0x404488, 0x884444, 0x336644];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const tab = tabNames[i];
       const btn = new ActionButton(tabLabels[i], tabWidth - 10, 60, tabColors[i], () => {
         this.switchTab(tab);
@@ -1065,6 +1069,25 @@ export class GameScene extends Container {
 
   }
 
+  private buildQuestsView(gw: number): void {
+    this.questsView = new Container();
+    this.questsView.x = 40;
+    this.questsView.y = 20;
+
+    this.questPanel = new QuestPanel(this.engine.state, () => {
+      // Quest started — switch to quests tab to show the timer
+      this.switchTab('quests');
+    });
+    this.questsView.addChild(this.questPanel);
+
+    // Clip the view to avoid overflow beyond tab area
+    const mask = new Graphics();
+    mask.rect(-40, -20, gw, 1700);
+    mask.fill({ color: 0xffffff });
+    this.questsView.addChild(mask);
+    this.questsView.mask = mask;
+  }
+
   private switchTab(tab: TabName): void {
     this.currentTab = tab;
     this.tabContainer.removeChildren();
@@ -1074,6 +1097,10 @@ export class GameScene extends Container {
         break;
       case 'soul':
         this.tabContainer.addChild(this.soulView);
+        break;
+      case 'quests':
+        this.questPanel.rebuildList();
+        this.tabContainer.addChild(this.questsView);
         break;
     }
   }
@@ -1354,6 +1381,11 @@ export class GameScene extends Container {
     if (hasAutoRepair) {
       this.updateToggle(this.autoRepairToggle, state.autoRepairEnabled);
       this.updateThresholdStepper(this.autoRepairThresholdControl, state.autoRepairThreshold);
+    }
+
+    // Quest panel tick (always, to update active quest timer display)
+    if (this.currentTab === 'quests') {
+      this.questPanel.tick();
     }
 
     // Inline upgrade shop — rebuild layout (only unpurchased shown)

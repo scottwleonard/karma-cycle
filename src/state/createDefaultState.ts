@@ -41,6 +41,8 @@ export function createDefaultState(): GameState {
 
     activeBlessings: [],
 
+    activeQuest: null,
+
     totalPlayTime: 0,
     lastSaveTimestamp: Date.now(),
     version: 1,
