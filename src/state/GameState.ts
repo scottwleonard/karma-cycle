@@ -27,6 +27,14 @@ export interface ActiveBlessing {
   remaining: number; // seconds left
 }
 
+export interface ActiveQuest {
+  defId: string;
+  name: string;
+  timeRemaining: number; // seconds
+  wealthReward: number;
+  isComplete: boolean;
+}
+
 export interface GameState {
   playerName: string;
 
@@ -66,6 +74,9 @@ export interface GameState {
 
   // Active blessings (temporary buffs from other players)
   activeBlessings: ActiveBlessing[];
+
+  // Active quest (player-selected)
+  activeQuest: ActiveQuest | null;
 
   totalPlayTime: number;
   lastSaveTimestamp: number;

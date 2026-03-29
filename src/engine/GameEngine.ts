@@ -11,6 +11,7 @@ import * as lifeEventsSystem from '../systems/lifeEventsSystem';
 import type { LifeEventResult } from '../systems/lifeEventsSystem';
 import { getSoulUpgradeLevel } from '../systems/upgradeSystem';
 import * as blessingsSystem from '../systems/blessingsSystem';
+import * as questSystem from '../systems/questSystem';
 
 export class GameEngine {
   state: GameState;
@@ -73,6 +74,9 @@ export class GameEngine {
 
     // Enlightenment milestones + nirvana challenge timer
     enlightenmentSystem.update(dt, this.state, this.events);
+
+    // Active quest timer
+    questSystem.update(dt, this.state);
 
     // Life events — random occurrences
     this.lastLifeEvent = lifeEventsSystem.update(dt, this.state);
