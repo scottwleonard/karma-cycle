@@ -47,6 +47,19 @@ export class GameEngine {
           this.state.needs.hunger + CONFIG.needs.hunger.feedAmount,
         );
       }
+    } else if (
+      getSoulUpgradeLevel(this.state, 'auto_feed') === 0 &&
+      this.state.needs.hunger < CONFIG.needs.hunger.lowThreshold
+    ) {
+      // Emergency auto-feed: always available at critical threshold (20%)
+      const cost = getFeedCost(this.state);
+      if (this.state.wealth >= cost) {
+        this.state.wealth -= cost;
+        this.state.needs.hunger = Math.min(
+          100,
+          this.state.needs.hunger + CONFIG.needs.hunger.feedAmount,
+        );
+      }
     }
 
     // Auto-repair when unlocked and enabled
@@ -55,6 +68,19 @@ export class GameEngine {
       getSoulUpgradeLevel(this.state, 'auto_repair') > 0 &&
       this.state.needs.shelter < this.state.autoRepairThreshold
     ) {
+      const cost = getRepairCost(this.state);
+      if (this.state.wealth >= cost) {
+        this.state.wealth -= cost;
+        this.state.needs.shelter = Math.min(
+          100,
+          this.state.needs.shelter + CONFIG.needs.shelter.repairAmount,
+        );
+      }
+    } else if (
+      getSoulUpgradeLevel(this.state, 'auto_repair') === 0 &&
+      this.state.needs.shelter < CONFIG.needs.shelter.lowThreshold
+    ) {
+      // Emergency auto-repair: always available at critical threshold (20%)
       const cost = getRepairCost(this.state);
       if (this.state.wealth >= cost) {
         this.state.wealth -= cost;
