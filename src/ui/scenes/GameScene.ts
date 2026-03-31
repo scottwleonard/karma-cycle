@@ -14,6 +14,7 @@ import { EventLog } from '../components/EventLog';
 import type { AudioManager } from '../../audio/AudioManager';
 import { SuggestOverlay } from '../components/SuggestOverlay';
 import { TutorialOverlay } from '../components/TutorialOverlay';
+import { Tooltip } from '../components/Tooltip';
 import { SaveExportImportOverlay } from '../components/SaveExportImportOverlay';
 import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
@@ -158,6 +159,9 @@ export class GameScene extends Container {
 
   // Tutorial overlay
   private tutorialOverlay!: TutorialOverlay;
+
+  // Tooltip
+  private tooltip!: Tooltip;
 
   // Background rect for theme changes
   private bgRect!: Graphics;
@@ -511,9 +515,66 @@ export class GameScene extends Container {
     this.saveExportImportOverlay = new SaveExportImportOverlay(gw);
     this.saveExportImportOverlay.setGetState(() => this.engine.state);
     this.addChild(this.saveExportImportOverlay);
+
+    // === TOOLTIP (on top of game content, below modal overlays) ===
+    this.tooltip = new Tooltip();
+    this.addChild(this.tooltip);
+    this.setupTooltips();
   }
 
 
+
+  private setupTooltips(): void {
+    const TIPS: Array<{ target: Container; text: string }> = [
+      {
+        target: this.hungerBar,
+        text: 'Hunger — drains over time.\nIf it reaches 0, health drains faster.\nClick Feed to restore.',
+      },
+      {
+        target: this.shelterBar,
+        text: 'Shelter — decays over time.\nIf it reaches 0, health drains faster.\nClick Repair to restore.',
+      },
+      {
+        target: this.healthBar,
+        text: 'Health — regenerates when needs are met.\nIf it reaches 0 you die and lose 75%\nof this life\'s karma.',
+      },
+      {
+        target: this.feedButton,
+        text: 'Feed — spend wealth to restore hunger.\nCost increases with each new life.',
+      },
+      {
+        target: this.repairButton,
+        text: 'Repair — spend wealth to restore shelter.\nCost increases with each new life.',
+      },
+      {
+        target: this.rebirthButton,
+        text: 'Rebirth — voluntarily end this life.\nBanks karma as a permanent multiplier bonus.\nRequires 10+ karma and needs above 10%.',
+      },
+      {
+        target: this.karmaCounter,
+        text: 'Karma — earned passively over time.\nBank karma via Rebirth for lasting bonuses.\nUsed to buy Soul upgrades.',
+      },
+      {
+        target: this.wealthCounter,
+        text: 'Wealth — earned passively over time.\nSpend it on Feed, Repair, and life upgrades.\nLost when you die or rebirth.',
+      },
+    ];
+
+    for (const { target, text } of TIPS) {
+      target.eventMode = 'static';
+      target.on('pointerover', (e) => {
+        const local = e.getLocalPosition(this);
+        this.tooltip.show(text, local.x, local.y + 12);
+      });
+      target.on('pointermove', (e) => {
+        if (this.tooltip.visible) {
+          const local = e.getLocalPosition(this);
+          this.tooltip.show(text, local.x, local.y + 12);
+        }
+      });
+      target.on('pointerout', () => this.tooltip.hide());
+    }
+  }
 
   private buildGameView(gw: number): void {
     this.gameView = new Container();
