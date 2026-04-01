@@ -56,7 +56,7 @@ async function tryMerge(token: string, prNumber: number, voters: string[]): Prom
 }
 
 /** Close a PR, delete its branch, and close the linked issue with wontfix. */
-async function tryReject(token: string, prNumber: number, downvoters: string[]): Promise<boolean> {
+async function tryReject(token: string, prNumber: number, downvoters: string[], reason?: string): Promise<boolean> {
   const h = ghHeaders(token);
 
   // Get PR details (state + branch + linked issue)
@@ -65,11 +65,13 @@ async function tryReject(token: string, prNumber: number, downvoters: string[]):
   const pr = (await prRes.json()) as { state: string; head: { ref: string }; body: string };
   if (pr.state !== 'open') return false;
 
+  const reasonSection = reason ? `\n\n**Downvote reason:** ${reason}` : '';
+
   // Comment on PR
   await fetch(`https://api.github.com/repos/${REPO}/issues/${prNumber}/comments`, {
     method: 'POST', headers: h,
     body: JSON.stringify({
-      body: `👎 This PR received ${downvoters.length} downvotes and has been rejected by the community.\n\nDownvoters: ${downvoters.join(', ')}`,
+      body: `👎 This PR received ${downvoters.length} downvotes and has been rejected by the community.\n\nDownvoters: ${downvoters.join(', ')}${reasonSection}`,
     }),
   });
 
@@ -103,10 +105,13 @@ async function tryReject(token: string, prNumber: number, downvoters: string[]):
     });
 
     // Comment and close the issue
+    const issueReasonSection = reason
+      ? `\n\n<!-- downvote-reason-for-rework -->\n**Downvote reason:** ${reason}`
+      : '';
     await fetch(`https://api.github.com/repos/${REPO}/issues/${issueNumber}/comments`, {
       method: 'POST', headers: h,
       body: JSON.stringify({
-        body: `👎 This suggestion was rejected by community vote (${downvoters.length} downvotes on PR #${prNumber}).\n\nDownvoters: ${downvoters.join(', ')}`,
+        body: `👎 This suggestion was rejected by community vote (${downvoters.length} downvotes on PR #${prNumber}).\n\nDownvoters: ${downvoters.join(', ')}${issueReasonSection}`,
       }),
     });
 
@@ -194,7 +199,7 @@ const handler: Handler = async (event) => {
     if (!instance.startsWith('deploy-preview-')) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Voting is only allowed from preview deploys' }) };
     }
-    let body: { pr_number?: number; player_name?: string; direction?: string };
+    let body: { pr_number?: number; player_name?: string; direction?: string; reason?: string };
     try {
       body = JSON.parse(event.body || '{}');
     } catch {
@@ -204,6 +209,7 @@ const handler: Handler = async (event) => {
     const prNumber = body.pr_number;
     const playerName = (body.player_name || '').trim();
     const direction = body.direction === 'down' ? 'down' : 'up';
+    const reason = direction === 'down' && body.reason ? String(body.reason).slice(0, 280).trim() : undefined;
 
     if (!prNumber || !playerName) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing pr_number or player_name' }) };
@@ -239,7 +245,7 @@ const handler: Handler = async (event) => {
           merged = await tryMerge(token, prNumber, info.upVoters);
         }
         if (info.down >= VOTES_TO_REJECT) {
-          rejected = await tryReject(token, prNumber, info.downVoters);
+          rejected = await tryReject(token, prNumber, info.downVoters, reason);
         }
       }
 

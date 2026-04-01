@@ -325,13 +325,23 @@ export class ActivityLog {
         const isThis = isUp ? currentVoteUp : currentVoteDown;
         if (isThis) return;
 
+        // Require a reason when downvoting
+        let reason: string | undefined;
+        if (!isUp) {
+          const input = await this.promptDownvoteReason();
+          if (input === null) return; // user cancelled
+          reason = input;
+        }
+
         btn.disabled = true;
         btn.textContent = '...';
         try {
+          const payload: Record<string, unknown> = { pr_number: issue.number, player_name: this.playerName, direction };
+          if (reason) payload.reason = reason;
           const res = await fetch('/.netlify/functions/vote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pr_number: issue.number, player_name: this.playerName, direction }),
+            body: JSON.stringify(payload),
           });
           const result = (await res.json()) as { success: boolean; up?: number; down?: number; merged?: boolean; rejected?: boolean };
           if (result.success) {
@@ -382,6 +392,102 @@ export class ActivityLog {
     }
     entry.appendChild(links);
     return entry;
+  }
+
+  private promptDownvoteReason(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000; font-family: monospace;
+      `;
+
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `
+        background: #0a0a2e;
+        border: 1px solid rgba(255,215,0,0.5);
+        border-radius: 12px;
+        padding: 20px;
+        width: min(300px, 90vw);
+        display: flex; flex-direction: column; gap: 10px;
+      `;
+
+      const title = document.createElement('div');
+      title.style.cssText = 'color: #ffd700; font-size: 12px; font-weight: bold;';
+      title.textContent = '👎 Why are you downvoting?';
+
+      const hint = document.createElement('div');
+      hint.style.cssText = 'color: rgba(255,215,0,0.5); font-size: 10px;';
+      hint.textContent = 'Your feedback may help improve the suggestion.';
+
+      const textarea = document.createElement('textarea');
+      textarea.placeholder = 'Enter your reason... (required)';
+      textarea.maxLength = 280;
+      textarea.style.cssText = `
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,215,0,0.3);
+        border-radius: 6px;
+        color: #ddd; font-family: monospace; font-size: 11px;
+        padding: 8px; resize: vertical; min-height: 70px; outline: none;
+        width: 100%; box-sizing: border-box;
+      `;
+
+      const counter = document.createElement('div');
+      counter.style.cssText = 'color: rgba(255,215,0,0.4); font-size: 9px; text-align: right;';
+      counter.textContent = '0 / 280';
+      textarea.addEventListener('input', () => {
+        counter.textContent = `${textarea.value.length} / 280`;
+        textarea.style.borderColor = textarea.value.trim() ? 'rgba(255,215,0,0.3)' : '#cc6666';
+      });
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end;';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = `
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 4px; padding: 5px 12px; cursor: pointer;
+        color: #aaa; font-family: monospace; font-size: 10px;
+      `;
+
+      const submitBtn = document.createElement('button');
+      submitBtn.textContent = '👎 Downvote';
+      submitBtn.style.cssText = `
+        background: rgba(204,102,102,0.15); border: 1px solid #cc6666;
+        border-radius: 4px; padding: 5px 12px; cursor: pointer;
+        color: #cc6666; font-family: monospace; font-size: 10px;
+      `;
+
+      cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(null);
+      });
+
+      submitBtn.addEventListener('click', () => {
+        const reason = textarea.value.trim();
+        if (!reason) {
+          textarea.style.borderColor = '#cc6666';
+          textarea.focus();
+          return;
+        }
+        document.body.removeChild(overlay);
+        resolve(reason);
+      });
+
+      btnRow.appendChild(cancelBtn);
+      btnRow.appendChild(submitBtn);
+      dialog.appendChild(title);
+      dialog.appendChild(hint);
+      dialog.appendChild(textarea);
+      dialog.appendChild(counter);
+      dialog.appendChild(btnRow);
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+      textarea.focus();
+    });
   }
 
   private makeLink(text: string, url: string, color: string): HTMLAnchorElement {
