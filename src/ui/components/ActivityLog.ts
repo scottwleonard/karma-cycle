@@ -53,6 +53,9 @@ export class ActivityLog {
   private readonly onResize: () => void;
   private playerName = '';
   private versionBar: HTMLDivElement;
+  private logTabEl!: HTMLDivElement;
+  private communityTabEl!: HTMLDivElement;
+  private overlayMode = false;
 
   setPlayerName(name: string): void {
     this.playerName = name;
@@ -94,7 +97,9 @@ export class ActivityLog {
     `;
 
     const logTab = this.makeTab('Log', true);
+    this.logTabEl = logTab;
     const communityTab = this.makeTab('Community', false);
+    this.communityTabEl = communityTab;
 
     logTab.addEventListener('click', () => {
       logTab.style.color = 'rgba(255, 215, 0, 0.85)';
@@ -401,7 +406,36 @@ export class ActivityLog {
     return a;
   }
 
+  /** Programmatically switch to the log or community sub-tab. */
+  activateSubTab(tab: 'log' | 'community'): void {
+    if (tab === 'log') {
+      this.logTabEl.click();
+    } else {
+      this.communityTabEl.click();
+    }
+  }
+
+  /** Show the panel as an overlay covering the game canvas area. */
+  showOverlay(layout: LayoutInfo): void {
+    this.overlayMode = true;
+    this.container.style.left = `${layout.offsetX}px`;
+    this.container.style.top = `${layout.offsetY}px`;
+    this.container.style.width = `${layout.gameWidth}px`;
+    this.container.style.bottom = `${window.innerHeight - layout.offsetY - layout.gameHeight}px`;
+    this.container.style.zIndex = '200';
+    this.container.style.display = 'flex';
+  }
+
+  /** Exit overlay mode and restore normal sidebar positioning on next updatePosition call. */
+  hideOverlay(): void {
+    this.overlayMode = false;
+    this.container.style.zIndex = '100';
+    this.container.style.top = '32px';
+    this.container.style.bottom = '32px';
+  }
+
   updatePosition(layout?: LayoutInfo): void {
+    if (this.overlayMode) return;
     const panel = layout?.rightPanel;
     if (!panel) {
       this.container.style.display = 'none';

@@ -46,7 +46,7 @@ import {
   getSoulUpgradeLevel,
 } from '../../systems/upgradeSystem';
 
-type TabName = 'game' | 'soul';
+type TabName = 'game' | 'soul' | 'log' | 'community';
 
 // Compact upgrade row shown inline on the game screen
 interface UpgradeRow {
@@ -335,16 +335,16 @@ export class GameScene extends Container {
 
     this.tabContainer.addChild(this.gameView);
 
-    // === TAB BUTTONS (just 2 now) ===
+    // === TAB BUTTONS (Game, Soul, Log, Community) ===
     const tabY = 1800;
-    const tabWidth = (gw - 60) / 2;
-    const tabNames: TabName[] = ['game', 'soul'];
-    const tabLabels = ['Game', 'Soul'];
-    const tabColors = [0x404488, 0x884444];
+    const tabWidth = (gw - 80) / 4;
+    const tabNames: TabName[] = ['game', 'soul', 'log', 'community'];
+    const tabLabels = ['Game', 'Soul', 'Log', 'Community'];
+    const tabColors = [0x404488, 0x884444, 0x2a4a2a, 0x2a3a5a];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 4; i++) {
       const tab = tabNames[i];
-      const btn = new ActionButton(tabLabels[i], tabWidth - 10, 60, tabColors[i], () => {
+      const btn = new ActionButton(tabLabels[i], tabWidth - 8, 60, tabColors[i], () => {
         this.switchTab(tab);
       });
       btn.x = 30 + i * tabWidth;
@@ -1131,10 +1131,26 @@ export class GameScene extends Container {
     this.tabContainer.removeChildren();
     switch (tab) {
       case 'game':
+        this.activityLog.hideOverlay();
+        this.activityLog.updatePosition(this.layout);
         this.tabContainer.addChild(this.gameView);
         break;
       case 'soul':
+        this.activityLog.hideOverlay();
+        this.activityLog.updatePosition(this.layout);
         this.tabContainer.addChild(this.soulView);
+        break;
+      case 'log':
+        if (!this.layout.rightPanel) {
+          this.activityLog.showOverlay(this.layout);
+        }
+        this.activityLog.activateSubTab('log');
+        break;
+      case 'community':
+        if (!this.layout.rightPanel) {
+          this.activityLog.showOverlay(this.layout);
+        }
+        this.activityLog.activateSubTab('community');
         break;
     }
   }
