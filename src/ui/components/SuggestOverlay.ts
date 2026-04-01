@@ -90,7 +90,7 @@ export class SuggestOverlay extends Container {
     this.addChild(this.statusText);
 
     // Submit button
-    this.submitButton = new ActionButton('Submit', 300, 70, 0x886622, () => {
+    this.submitButton = new ActionButton('Submit', 300, 70, 0x2a6a2a, () => {
       this.handleSubmit();
     });
     this.submitButton.x = gameWidth / 2 - 320;
@@ -98,7 +98,7 @@ export class SuggestOverlay extends Container {
     this.addChild(this.submitButton);
 
     // Cancel button
-    this.cancelButton = new ActionButton('Cancel', 200, 70, 0x3a3a6e, () => {
+    this.cancelButton = new ActionButton('Cancel', 200, 70, 0x1a4a2a, () => {
       this.hide();
     });
     this.cancelButton.x = gameWidth / 2 + 40;
@@ -106,7 +106,7 @@ export class SuggestOverlay extends Container {
     this.addChild(this.cancelButton);
 
     // Submit Anyway button (hidden initially, shown on duplicate)
-    this.submitAnywayButton = new ActionButton('Submit Anyway', 300, 70, 0x886622, () => {
+    this.submitAnywayButton = new ActionButton('Submit Anyway', 300, 70, 0x2a6a2a, () => {
       this.forceSubmit();
     });
     this.submitAnywayButton.x = gameWidth / 2 - 320;

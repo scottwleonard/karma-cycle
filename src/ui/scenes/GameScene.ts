@@ -340,7 +340,7 @@ export class GameScene extends Container {
     const tabWidth = (gw - 60) / 2;
     const tabNames: TabName[] = ['game', 'soul'];
     const tabLabels = ['Game', 'Soul'];
-    const tabColors = [0x404488, 0x884444];
+    const tabColors = [0x2a6a2a, 0x1a5a2a];
 
     for (let i = 0; i < 2; i++) {
       const tab = tabNames[i];
@@ -388,7 +388,7 @@ export class GameScene extends Container {
     this.deathSubtext.y = 700;
     this.deathOverlay.addChild(this.deathSubtext);
 
-    this.continueButton = new ActionButton('Begin New Life', 400, 80, 0x996633, () => {
+    this.continueButton = new ActionButton('Begin New Life', 400, 80, 0x2a6a2a, () => {
       performDeathRebirth(this.engine.state, this.engine.events);
       this.deathOverlay.visible = false;
       resetLifeEvents();
@@ -474,7 +474,7 @@ export class GameScene extends Container {
     resetWarning.y = 750;
     this.resetOverlay.addChild(resetWarning);
 
-    const confirmResetBtn = new ActionButton('Yes, Reset Everything', 450, 80, 0xaa2222, () => {
+    const confirmResetBtn = new ActionButton('Yes, Reset Everything', 450, 80, 0x4a6a1a, () => {
       // Set a flag so main.ts clears save data on reload
       // (beforeunload would otherwise re-save the current state)
       sessionStorage.setItem('karma_cycle_reset', '1');
@@ -484,7 +484,7 @@ export class GameScene extends Container {
     confirmResetBtn.y = 1000;
     this.resetOverlay.addChild(confirmResetBtn);
 
-    const cancelResetBtn = new ActionButton('Cancel', 250, 70, 0x3a3a6e, () => {
+    const cancelResetBtn = new ActionButton('Cancel', 250, 70, 0x1a4a2a, () => {
       this.resetOverlay.visible = false;
     });
     cancelResetBtn.x = gw / 2 - 125;
@@ -611,7 +611,7 @@ export class GameScene extends Container {
     const btnGap = 12;
     const btnW = (contentW - btnGap * 2) / 3;
 
-    this.feedButton = new ActionButton('Feed', btnW, 80, CONFIG.display.hungerColor, () => {
+    this.feedButton = new ActionButton('Feed', btnW, 80, 0x2a6a2a, () => {
       const cost = getFeedCost(this.engine.state);
       if (this.engine.state.wealth >= cost) {
         this.engine.state.wealth -= cost;
@@ -627,7 +627,7 @@ export class GameScene extends Container {
     this.feedButton.y = btnY;
     this.gameView.addChild(this.feedButton);
 
-    this.repairButton = new ActionButton('Repair', btnW, 80, CONFIG.display.shelterColor, () => {
+    this.repairButton = new ActionButton('Repair', btnW, 80, 0x2a6a2a, () => {
       const cost = getRepairCost(this.engine.state);
       if (this.engine.state.wealth >= cost) {
         this.engine.state.wealth -= cost;
@@ -643,7 +643,7 @@ export class GameScene extends Container {
     this.repairButton.y = btnY;
     this.gameView.addChild(this.repairButton);
 
-    this.rebirthButton = new ActionButton('Rebirth', btnW, 80, 0x7b4fba, () => {
+    this.rebirthButton = new ActionButton('Rebirth', btnW, 80, 0x2a6a2a, () => {
       performRebirth(this.engine.state, this.engine.events);
       this.karmaPopAccum = 0;
       resetLifeEvents();
@@ -658,7 +658,7 @@ export class GameScene extends Container {
 
     // Auto toggles (hidden until soul upgrade purchased)
     const toggleY = btnY + 80 + 8; // button height + xs gap
-    this.autoFeedToggle = this.buildToggle('Auto Feed', CONFIG.display.hungerColor, () => {
+    this.autoFeedToggle = this.buildToggle('Auto Feed', 0x2a6a2a, () => {
       this.engine.state.autoFeedEnabled = !this.engine.state.autoFeedEnabled;
     });
     this.autoFeedToggle.x = GM;
@@ -666,7 +666,7 @@ export class GameScene extends Container {
     this.autoFeedToggle.visible = false;
     this.gameView.addChild(this.autoFeedToggle);
 
-    this.autoRepairToggle = this.buildToggle('Auto Repair', CONFIG.display.shelterColor, () => {
+    this.autoRepairToggle = this.buildToggle('Auto Repair', 0x2a6a2a, () => {
       this.engine.state.autoRepairEnabled = !this.engine.state.autoRepairEnabled;
     });
     this.autoRepairToggle.x = GM + btnW + btnGap;
@@ -677,7 +677,7 @@ export class GameScene extends Container {
     // Threshold steppers (hidden until soul upgrade purchased)
     const thresholdY = toggleY + 36 + 8;
     this.autoFeedThresholdControl = this.buildThresholdStepper(
-      CONFIG.display.hungerColor,
+      0x2a6a2a,
       () => {
         this.engine.state.autoFeedThreshold = Math.max(
           20,
@@ -697,7 +697,7 @@ export class GameScene extends Container {
     this.gameView.addChild(this.autoFeedThresholdControl);
 
     this.autoRepairThresholdControl = this.buildThresholdStepper(
-      CONFIG.display.shelterColor,
+      0x2a6a2a,
       () => {
         this.engine.state.autoRepairThreshold = Math.max(
           20,
@@ -1097,7 +1097,7 @@ export class GameScene extends Container {
     this.soulView.addChild(title);
 
     SOUL_UPGRADES.forEach((def, i) => {
-      const btn = new ActionButton(def.name, gw - 80, 70, 0x5a2a55, () => {
+      const btn = new ActionButton(def.name, gw - 80, 70, 0x2a6a2a, () => {
         if (buySoulUpgrade(this.engine.state, def)) {
           this.engine.events.emit({
             type: 'soul_upgrade_purchased',
@@ -1112,7 +1112,7 @@ export class GameScene extends Container {
     });
 
     // Seek Nirvana button — below soul upgrades
-    this.seekNirvanaButton = new ActionButton('Seek Nirvana', gw - 80, 80, 0x8844cc, () => {
+    this.seekNirvanaButton = new ActionButton('Seek Nirvana', gw - 80, 80, 0x2a6a2a, () => {
       startNirvanaChallenge(this.engine.state, this.engine.events);
       resetLifeEvents();
       this.eventLog.clear();
@@ -1273,7 +1273,7 @@ export class GameScene extends Container {
       this.victoryOverlay.addChild(text);
     });
 
-    const continueBtn = new ActionButton('Continue Playing', 400, 80, 0x446644, () => {
+    const continueBtn = new ActionButton('Continue Playing', 400, 80, 0x2a6a2a, () => {
       this.victoryOverlay.visible = false;
       // If the player is dead (died during/after nirvana), revive them
       if (!this.engine.state.isAlive) {

@@ -64,7 +64,7 @@ export class SaveExportImportOverlay extends Container {
     exportDesc.y = panelY + 185;
     this.addChild(exportDesc);
 
-    const exportBtn = new ActionButton('Download Save File', 380, 70, 0x226622, () => {
+    const exportBtn = new ActionButton('Download Save File', 380, 70, 0x2a6a2a, () => {
       this.doExport();
     });
     exportBtn.x = gameWidth / 2 - 190;
@@ -103,7 +103,7 @@ export class SaveExportImportOverlay extends Container {
     importDesc.y = panelY + 395;
     this.addChild(importDesc);
 
-    const importBtn = new ActionButton('Load Save File...', 380, 70, 0x664422, () => {
+    const importBtn = new ActionButton('Load Save File...', 380, 70, 0x2a6a2a, () => {
       this.doImport();
     });
     importBtn.x = gameWidth / 2 - 190;
@@ -121,7 +121,7 @@ export class SaveExportImportOverlay extends Container {
     this.addChild(this.statusText);
 
     // Close button
-    const closeBtn = new ActionButton('Close', 200, 60, 0x3a3a6e, () => {
+    const closeBtn = new ActionButton('Close', 200, 60, 0x1a4a2a, () => {
       this.hide();
     });
     closeBtn.x = gameWidth / 2 - 100;
