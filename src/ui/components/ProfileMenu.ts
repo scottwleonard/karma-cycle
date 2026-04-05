@@ -5,9 +5,11 @@ export interface ProfileMenuCallbacks {
   onReset: () => void;
   onSaveLoad: () => void;
   onToggleMute: () => boolean;
+  onToggleHaptic: () => boolean;
   onChangeName: () => void;
   onAvatarChange: (dataUrl: string) => void;
   isMuted: () => boolean;
+  isHapticEnabled: () => boolean;
 }
 
 export class ProfileMenu {
@@ -16,6 +18,7 @@ export class ProfileMenu {
   private dropdown: HTMLDivElement;
   private nameLabel: HTMLSpanElement;
   private muteItem: HTMLDivElement;
+  private hapticItem: HTMLDivElement;
   private dropdownAvatar: HTMLDivElement;
 
   constructor(playerName: string, callbacks: ProfileMenuCallbacks) {
@@ -132,6 +135,15 @@ export class ProfileMenu {
       },
     );
     this.dropdown.appendChild(this.muteItem);
+
+    this.hapticItem = this.makeItem(
+      callbacks.isHapticEnabled() ? '📳 Haptics: On' : '📳 Haptics: Off',
+      () => {
+        const enabled = callbacks.onToggleHaptic();
+        this.hapticItem.textContent = enabled ? '📳 Haptics: On' : '📳 Haptics: Off';
+      },
+    );
+    this.dropdown.appendChild(this.hapticItem);
 
     this.dropdown.appendChild(this.makeItem('💾 Save / Load', () => {
       this.close();

@@ -20,6 +20,7 @@ import { ToastManager } from '../components/Toast';
 import { ActivityLog } from '../components/ActivityLog';
 import { showNamePrompt } from '../components/NamePrompt';
 import { ProfileMenu } from '../components/ProfileMenu';
+import { HapticManager } from '../HapticManager';
 import { SuggestionTracker } from '../SuggestionTracker';
 import { getNetKarmaPerSecond, getKarmaDrainPerSecond } from '../../systems/karmaSystem';
 import { reset as resetLifeEvents } from '../../systems/lifeEventsSystem';
@@ -143,6 +144,7 @@ export class GameScene extends Container {
   // Audio
   private audioManager: AudioManager;
   private profileMenu!: ProfileMenu;
+  private hapticManager!: HapticManager;
 
   // Community suggest
   private suggestOverlay!: SuggestOverlay;
@@ -198,6 +200,8 @@ export class GameScene extends Container {
   }
 
   private buildUI(): void {
+    this.hapticManager = new HapticManager();
+
     const gw = CONFIG.display.referenceWidth;
     const gh = CONFIG.display.referenceHeight;
     const MARGIN = 40;
@@ -226,6 +230,8 @@ export class GameScene extends Container {
       onChangeName: () => this.promptNameChange(),
       onAvatarChange: () => { /* Avatar saved to localStorage, picked up on next score submit */ },
       isMuted: () => this.audioManager.isMuted,
+      onToggleHaptic: () => this.hapticManager.toggle(),
+      isHapticEnabled: () => this.hapticManager.isEnabled,
     });
 
     // === HEADER (Life info — below top area) ===
@@ -621,6 +627,7 @@ export class GameScene extends Container {
         );
         this.mandala.pulse(0.3);
         this.particles.burst(5, 0xff8c00);
+        this.hapticManager.feed();
       }
     });
     this.feedButton.x = GM;
@@ -637,6 +644,7 @@ export class GameScene extends Container {
         );
         this.mandala.pulse(0.3);
         this.particles.burst(5, 0x20b2aa);
+        this.hapticManager.repair();
       }
     });
     this.repairButton.x = GM + btnW + btnGap;
@@ -650,6 +658,7 @@ export class GameScene extends Container {
       this.eventLog.clear();
       this.mandala.pulse(2);
       this.particles.burst(30, 0xbb88ff);
+      this.hapticManager.rebirth();
     });
     this.rebirthButton.x = GM + (btnW + btnGap) * 2;
     this.rebirthButton.y = btnY;
@@ -1145,6 +1154,7 @@ export class GameScene extends Container {
         case 'death':
           this.showDeath();
           this.activityLog.addGameEvent('death', `Died — lost ${formatNumber(event.karmaLost)} karma`);
+          this.hapticManager.death();
           break;
         case 'rebirth':
           // Rebirth burst
@@ -1175,6 +1185,7 @@ export class GameScene extends Container {
           this.particles.burst(40, tierColors[event.tier]);
           this.showMilestonePopup(event.tierName, event.tier);
           this.activityLog.addGameEvent('enlightenment_reached', `${event.tierName} reached`);
+          this.hapticManager.milestone();
           break;
         case 'nirvana_challenge_started':
           this.mandala.pulse(1.5);
@@ -1509,6 +1520,7 @@ export class GameScene extends Container {
       if (totalKarma >= milestone && state.lastCelebratedKarmaMilestone < milestone) {
         state.lastCelebratedKarmaMilestone = milestone;
         this.particles.burst(60, 0xffd700);
+        this.hapticManager.milestone();
         break;
       }
     }
